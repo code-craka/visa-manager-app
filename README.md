@@ -7,6 +7,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 ## ✨ Latest Updates
 
 ### 🚀 Version 0.2.1 (Current) - August 5, 2025
+
 - **🔧 TypeScript Compilation Fixes** - Zero compilation errors (37 → 0)
 - **🏗️ Build Optimization** - Successful backend compilation with exit code 0
 - **🔐 Authentication Enhancement** - Streamlined auth middleware for development
@@ -14,6 +15,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 - **⚡ Development Workflow** - Optimized build process and error handling
 
 ### 🔴 Version 0.2.0 - Real-time & Material Design
+
 - **Live WebSocket Communication** - Instant notifications and updates
 - **Real-time Dashboard** - Live statistics and connection status
 - **Material Design Components** - Modern UI with React Native Paper
@@ -23,6 +25,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 ## Features
 
 ### Core Functionality
+
 - **User Authentication:** Secure registration and login for both agency and partner users
 - **Client Management:** Agencies can create, view, update, and delete client profiles with visa information
 - **Task Management:** Advanced task assignment system with dual modes:
@@ -57,7 +60,8 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 ## Architecture
 
 ### Frontend Architecture
-```
+
+``` markdown
 visa_manager_frontend/
 ├── src/
 │   ├── services/
@@ -79,7 +83,8 @@ visa_manager_frontend/
 ```
 
 ### Backend Architecture
-```
+
+``` markdown
 visa-manager-backend/
 ├── src/
 │   ├── models/                    # Database models
@@ -101,13 +106,15 @@ visa-manager-backend/
 
 ### Installation
 
-1.  **Clone the repository:**
+1. **Clone the repository:**
+
     ```bash
     git clone https://github.com/code-craka/visa-manager-app.git
     cd visa-manager-app
     ```
 
-2.  **Backend Setup:**
+2. **Backend Setup:**
+
     ```bash
     cd visa-manager-backend
     npm install
@@ -117,7 +124,8 @@ visa-manager-backend/
     npm start
     ```
 
-3.  **Frontend Setup:**
+3. **Frontend Setup:**
+
     ```bash
     cd ../visa_manager_frontend
     npm install
@@ -129,7 +137,7 @@ visa-manager-backend/
 
 ## Project Structure
 
-```
+```markdown
 visa-manager-app/
 ├── visa-manager-backend/
 │   ├── src/
@@ -154,6 +162,7 @@ visa-manager-app/
 ## 📚 Documentation
 
 ### Project Documentation
+
 - **[CHANGELOG.md](./CHANGELOG.md)** - Detailed version history and changes
 - **[RELEASE_NOTES.md](./RELEASE_NOTES.md)** - Comprehensive release information
 - **[VERSION_CONTROL.md](./VERSION_CONTROL.md)** - Git workflow and tagging strategy
@@ -161,6 +170,7 @@ visa-manager-app/
 - **[GEMINI.md](./GEMINI.md)** - AI development session logs
 
 ### Quick Reference
+
 - **Current Version:** v0.2.1 (Stable)
 - **Previous Version:** v0.2.0 (Real-time features)
 - **Git Tags:** `v0.2.1`, `v0.2.0`

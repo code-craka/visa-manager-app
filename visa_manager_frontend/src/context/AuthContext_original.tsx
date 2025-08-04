@@ -1,4 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { StackClientApp } from '@stackframe/react';
+
+// Initialize Stack client with your configuration
+const stack = new StackClientApp({
+  projectId: 'cda3af03-3de4-4571-be6c-479330bb1693',
+  publishableClientKey: 'pck_5q04fnnv80mcjcg0r4zt5femv8v65vyhazgwtwfaenqzr',
+});
 
 interface User {
   id: string;
@@ -34,7 +41,6 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [authToken, setAuthToken] = useState<string | null>(null);
 
   // Backend API base URL - adjust this to your backend URL
   const API_BASE_URL = 'http://localhost:3000/api';
@@ -42,71 +48,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuthState = useCallback(async () => {
     try {
       setIsLoading(true);
-      // Check if we have a stored auth token
-      const storedToken = authToken;
+      const currentUser = await stack.getUser();
       
-      if (storedToken) {
-        // Try to get user profile from backend
-        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-          headers: {
-            'Authorization': `Bearer ${storedToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (response.ok) {
-          const userData = await response.json();
-          setUser({
-            id: userData.user.id || 'mock-user-id',
-            email: userData.user.email || 'user@example.com',
-            displayName: userData.user.displayName || 'Mock User',
-            role: userData.user.role,
+      if (currentUser) {
+        // Get additional user data from backend
+        const token = await getAuthToken();
+        if (token) {
+          const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
           });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser({
+              id: currentUser.id,
+              email: currentUser.primaryEmail || '',
+              displayName: currentUser.displayName || currentUser.primaryEmail || '',
+              role: userData.role,
+            });
+          } else {
+            // User exists in Stack Auth but not in backend, clear auth
+            await signOut();
+          }
         } else {
-          // Token invalid, clear auth
-          setAuthToken(null);
-          setUser(null);
+          setUser({
+            id: currentUser.id,
+            email: currentUser.primaryEmail || '',
+            displayName: currentUser.displayName || currentUser.primaryEmail || '',
+          });
         }
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
-      setAuthToken(null);
-      setUser(null);
     } finally {
       setIsLoading(false);
     }
-  }, [authToken, API_BASE_URL]);
+  }, [API_BASE_URL]);
 
   useEffect(() => {
+    // Check if user is already logged in when the app starts
     checkAuthState();
   }, [checkAuthState]);
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      
-      // For development, create a mock token
-      // In production, this would authenticate with Stack Auth
-      const mockToken = `mock-token-${Date.now()}`;
-      
-      // Try to sync with backend first
-      const response = await fetch(`${API_BASE_URL}/auth/sync-user`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          role: 'agency' // Default role for development
-        }),
-      });
-
-      if (response.ok) {
-        setAuthToken(mockToken);
-        await checkAuthState();
-      } else {
-        throw new Error('Authentication failed');
-      }
+      // Use Stack Auth credentials sign in
+      await stack.signInWithCredential({ email, password });
+      await checkAuthState();
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -118,28 +110,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password: string, displayName: string) => {
     try {
       setIsLoading(true);
-      
-      // For development, create a mock token
-      const mockToken = `mock-token-${Date.now()}`;
-      
-      // Try to sync with backend
-      const response = await fetch(`${API_BASE_URL}/auth/sync-user`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mockToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          role: 'agency' // Default role for development
-        }),
+      // Use Stack Auth credentials sign up
+      await stack.signUpWithCredential({ 
+        email, 
+        password,
+        displayName 
       });
-
-      if (response.ok) {
-        setAuthToken(mockToken);
-        await checkAuthState();
-      } else {
-        throw new Error('Sign up failed');
-      }
+      await checkAuthState();
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
@@ -151,7 +128,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      setAuthToken(null);
+      await stack.signOut();
       setUser(null);
     } catch (error) {
       console.error('Sign out error:', error);
@@ -194,7 +171,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const getAuthToken = async (): Promise<string | null> => {
-    return authToken;
+    try {
+      const currentUser = stack.getUser();
+      if (!currentUser) return null;
+      
+      return await currentUser.getAccessToken();
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return null;
+    }
   };
 
   const value: AuthContextType = {
@@ -214,4 +199,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-export default AuthProvider;
+export { stack };
