@@ -68,6 +68,17 @@ web-build/
 
 # TypeScript
 *.tsbuildinfo
+# Compiled TypeScript output
+**/*.d.ts
+**/*.d.ts.map
+**/*.js.map
+# But keep explicitly written JavaScript files and important config
+!**/babel.config.js
+!**/metro.config.js
+!**/jest.config.js
+!**/index.js
+!**/.prettierrc.js
+!**/.eslintrc.js
 
 # Testing
 /coverage/
@@ -138,6 +149,10 @@ jspm_packages/
 /visa-manager-backend/build/
 /visa-manager-backend/node_modules/
 /visa-manager-backend/.env
+/visa-manager-backend/src/**/*.js
+/visa-manager-backend/src/**/*.d.ts
+/visa-manager-backend/src/**/*.js.map
+/visa-manager-backend/src/**/*.d.ts.map
 
 # Frontend specific
 /visa_manager_frontend/node_modules/
