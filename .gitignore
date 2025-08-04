@@ -151,6 +151,7 @@ jspm_packages/
 /visa-manager-backend/.env
 /visa-manager-backend/src/**/*.js
 /visa-manager-backend/src/**/*.d.ts
+!/visa-manager-backend/src/express.d.ts
 /visa-manager-backend/src/**/*.js.map
 /visa-manager-backend/src/**/*.d.ts.map
 
