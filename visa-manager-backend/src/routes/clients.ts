@@ -1,12 +1,12 @@
-import { Router } from 'express';
-import pool from '../db.js';
-import { verifyNeonAuth } from '../middleware/auth.js';
+import { Router, Request, Response } from 'express';
+import pool from '../db';
+import { verifyNeonAuth } from '../middleware/auth';
 import { getUserByNeonId, getDatabaseUserIdByNeonId } from '../models/User.js';
 
 const router = Router();
 
 // Create a new client (agency only)
-router.post('/', verifyNeonAuth, async (req, res) => {
+router.post('/', verifyNeonAuth, async (req: Request, res: Response) => {
   try {
     const { name, passport, visaType, email, phone } = req.body;
     const currentUser = req.user!;
@@ -80,7 +80,7 @@ router.get('/:id', verifyNeonAuth, async (req, res) => {
         INNER JOIN tasks t ON c.id = t.client_id 
         WHERE c.id = $1 AND t.assigned_to = $2
       `;
-      params = [id, dbUserId];
+      params = [id, dbUserId?.toString() || ''];
     }
 
     const client = await pool.query(query, params);
