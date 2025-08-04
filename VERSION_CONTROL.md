@@ -2,6 +2,22 @@
 
 This document outlines the version control strategy for the Visa Manager App monorepo.
 
+## Current Release Information
+
+### Version 0.2.1 - Latest Release ✅
+- **Release Date:** August 5, 2025
+- **Type:** Patch Release
+- **Git Tag:** `v0.2.1`
+- **Status:** Stable
+- **Changes:** TypeScript compilation fixes, build optimizations
+
+### Version 0.2.0 - Previous Release
+- **Release Date:** August 4, 2025
+- **Type:** Minor Release
+- **Git Tag:** `v0.2.0`
+- **Status:** Stable
+- **Changes:** Real-time features, Material Design, API enhancements
+
 ## Branching Strategy
 
 We will employ a simplified Gitflow-like branching strategy to manage development, releases, and hotfixes.
@@ -63,3 +79,38 @@ Each commit message consists of a **header**, a **body**, and a **footer**.
 -   **Version Numbers:** We follow Semantic Versioning (MAJOR.MINOR.PATCH).
 -   **Tagging:** Releases are marked with Git tags (e.g., `v1.0.0`). Tags are created from the `main` branch after a release merge.
 -   **Release Process:** When a `release/<version>` branch is ready, it is merged into `main` and `develop`. A tag is then created on `main`.
+
+## Git Tag Management
+
+### Current Tags
+- `v0.2.1` - Latest stable release (TypeScript fixes)
+- `v0.2.0` - Real-time features and Material Design
+- `v0.1.0` - Initial release (deprecated)
+
+### Creating Tags
+```bash
+# Create and push a new tag
+git tag -a v0.2.1 -m "Release version 0.2.1 - TypeScript compilation fixes"
+git push origin v0.2.1
+
+# List all tags
+git tag -l
+
+# Delete a tag (if needed)
+git tag -d v0.2.1
+git push origin --delete v0.2.1
+```
+
+### Tag Naming Convention
+- **Format:** `v<MAJOR>.<MINOR>.<PATCH>`
+- **Examples:** `v1.0.0`, `v1.2.3`, `v2.0.0-beta.1`
+- **Pre-releases:** Use suffixes like `-alpha.1`, `-beta.2`, `-rc.1`
+
+### Release Workflow
+1. **Prepare Release:** Create `release/v0.2.1` branch from `develop`
+2. **Update Documentation:** Update CHANGELOG.md, README.md, package.json versions
+3. **Test Release:** Run full test suite and integration tests
+4. **Merge to Main:** Create PR from `release/v0.2.1` to `main`
+5. **Create Tag:** Tag the merge commit on `main`
+6. **Deploy:** Deploy tagged version to production
+7. **Merge Back:** Merge `main` back to `develop` to sync changes
