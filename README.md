@@ -2,29 +2,95 @@
 
 ## Overview
 
-The Visa Manager App is designed to streamline and organize the workflow and commission tracking between a visa agency and its third-party partners. It serves as a central hub for task assignment, progress tracking, and commission management, aiming to eliminate fragmented communication channels.
+The Visa Manager App is a comprehensive mobile and web application designed to streamline and organize the workflow and commission tracking between visa agencies and their third-party partners. It serves as a central hub for task assignment, real-time progress tracking, and commission management, eliminating fragmented communication channels.
+
+## ✨ Latest Features (v0.2.0)
+
+### 🔴 Real-time Capabilities
+- **Live WebSocket Communication** - Instant notifications and updates
+- **Real-time Dashboard** - Live statistics and connection status
+- **Notification System** - Unread count tracking and click-to-navigate
+
+### 🎨 Enhanced User Interface
+- **Material Design Components** - Modern UI with React Native Paper
+- **Advanced Task Assignment** - Dual modes for new/existing task management
+- **Smart Client Management** - Search, filter, and sort with statistics
+- **Priority Management** - Color-coded priority levels and status indicators
+
+### ⚡ Performance Optimizations
+- **Efficient State Management** - Optimized React patterns with proper hooks
+- **Memory Management** - WebSocket cleanup and async operation handling
+- **Type Safety** - Comprehensive TypeScript implementation
 
 ## Features
 
 ### Core Functionality
-- **User Authentication:** Secure registration and login for both agency and partner users.
-- **Client Management:** Agencies can create, view, update, and delete client profiles, including visa-related information.
-- **Task Management:** Agencies can assign specific tasks (e.g., fingerprint, medical check-up) to third-party partners. Partners can view, accept/reject, and update task statuses.
-- **Commission Tracking:** Define commission structures for tasks, with automatic tracking of commissions for completed tasks. Detailed reports on payments, outstanding dues, and overall commission history are available.
-- **Notification System:** Real-time notifications for new task assignments (to partners) and task status updates (to agencies).
-- **Dashboard:** Provides an overview of key metrics for both agencies (total clients, pending/completed tasks, total commission earnings) and partners (newly assigned tasks, total completed tasks, earned commissions).
+- **User Authentication:** Secure registration and login for both agency and partner users
+- **Client Management:** Agencies can create, view, update, and delete client profiles with visa information
+- **Task Management:** Advanced task assignment system with dual modes:
+  - **New Task Creation:** Full form with priority levels, commission, and deadlines
+  - **Existing Task Assignment:** Select from pending tasks with status indicators
+- **Commission Tracking:** Define commission structures with automatic tracking and detailed reports
+- **Real-time Notification System:** Live notifications for task assignments and status updates
+- **Advanced Dashboard:** Comprehensive overview with live statistics and real-time updates
 
 ### Technology Stack
 
 - **Frontend:** React Native (with TypeScript)
-  - Cross-platform mobile application development.
-  - UI/UX designed with `react-native-elements` and a custom theme using Electric Violet (`#8D05D4`) as the primary brand color.
+  - Cross-platform mobile application development
+  - UI/UX designed with React Native Paper (Material Design)
+  - Real-time WebSocket integration
+  - Custom theme with Electric Violet (`#8D05D4`) primary color
 
 - **Backend:** Node.js (with TypeScript)
-  - High-performance, scalable API with Express.js.
+  - High-performance, scalable API with Express.js
+  - WebSocket server for real-time communication
+  - Comprehensive error handling and logging
 
 - **Database:** PostgreSQL (via Neon)
-  - Robust and scalable relational database solution.
+  - Robust and scalable relational database solution
+  - Optimized with proper indexing for performance
+
+- **Real-time:** WebSocket
+  - Auto-reconnection with exponential backoff
+  - Event-driven architecture for live updates
+  - Connection state management
+
+## Architecture
+
+### Frontend Architecture
+```
+visa_manager_frontend/
+├── src/
+│   ├── services/
+│   │   ├── ApiService.ts          # API communication layer
+│   │   └── WebSocketService.ts    # Real-time communication
+│   ├── context/
+│   │   ├── AuthContext.tsx        # Authentication state
+│   │   └── RealtimeContext.tsx    # Real-time state management
+│   ├── screens/
+│   │   ├── DashboardScreen.tsx    # Live dashboard with stats
+│   │   ├── ClientListScreen.tsx   # Enhanced client management
+│   │   ├── TaskAssignmentScreen.tsx # Advanced task assignment
+│   │   ├── LoginScreen.tsx        # Authentication
+│   │   └── ...                    # Other screens
+│   ├── navigation/
+│   │   └── AppNavigator.tsx       # Navigation structure
+│   └── styles/
+│       └── theme.ts               # Consistent theming
+```
+
+### Backend Architecture
+```
+visa-manager-backend/
+├── src/
+│   ├── models/                    # Database models
+│   ├── routes/                    # API endpoints
+│   ├── middleware/                # Authentication & validation
+│   ├── websocket/                 # Real-time server
+│   ├── db.ts                      # Database connection
+│   └── index.ts                   # Server entry point
+```
 
 ## Getting Started
 
