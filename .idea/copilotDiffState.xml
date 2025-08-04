@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/visa-manager-backend/.env">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/visa-manager-backend/.env" />
+              <option name="updatedContent" value="# Neon Auth environment variables&#10;STACK_PROJECT_ID='cda3af03-3de4-4571-be6c-479330bb1693'&#10;STACK_PUBLISHABLE_CLIENT_KEY='pck_gmnz9j1f8r4hpr6jw2gnrqqn74zrm85913zr0vz3sxz8g'&#10;STACK_SECRET_SERVER_KEY='ssk_q9y6v0p88nffhvhjnsjmqmkcre6xww9n6ba3hgzr62yt0'&#10;&#10;# Database connection string&#10;DATABASE_URL='postgresql://neondb_owner:npg_wbJ97qNLGsUD@ep-odd-scene-a1o55uls-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'&#10;&#10;# JWT Settings&#10;JWT_SECRET='your_jwt_secret_key_here'&#10;&#10;# Server Configuration&#10;PORT=3000&#10;NODE_ENV=development" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

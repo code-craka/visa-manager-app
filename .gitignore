@@ -1,11 +1,147 @@
-/tmp
-/out-tsc
-
-/node_modules
+# Dependencies
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 /.pnp
 .pnp.js
 
-.vscode/*
+# Production builds
+/dist/
+/build/
+/out/
+/tmp/
+/out-tsc/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.*
+!**/.env.example
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# React Native specific
+/android/app/build/
+/android/build/
+/android/.gradle/
+/android/gradle/
+/android/gradlew
+/android/gradlew.bat
+/ios/build/
+/ios/Pods/
+/ios/*.xcworkspace
+/ios/*.xcuserdata
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro bundler
+.metro-health-check*
+metro.config.js.bak
+
+# Expo (if using)
+.expo/
+dist/
+web-build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+/coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Backend specific
+/visa-manager-backend/dist/
+/visa-manager-backend/build/
+/visa-manager-backend/node_modules/
+/visa-manager-backend/.env
+
+# Frontend specific
+/visa_manager_frontend/node_modules/
+/visa_manager_frontend/.expo/
+/visa_manager_frontend/dist/
+/visa_manager_frontend/build/
+/visa_manager_frontend/.env
