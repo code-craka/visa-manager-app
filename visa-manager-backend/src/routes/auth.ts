@@ -1,47 +1,116 @@
 import { Router } from 'express';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { createOrUpdateUser, getUserByNeonId } from '../models/User.js';
+import { verifyNeonAuth } from '../middleware/auth.js';
 import pool from '../db.js';
 
 const router = Router();
 
-// User registration
-router.post('/register', async (req, res) => {
-  const { email, password, role } = req.body;
-
+// Sync user with Neon Auth - called after Neon Auth authentication
+router.post('/sync-user', verifyNeonAuth, async (req, res) => {
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await pool.query(
-      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING *',
-      [email, hashedPassword, role]
+    const { role = 'partner' } = req.body;
+    const neonUser = req.user!;
+
+    // Create or update user in our database
+    const user = await createOrUpdateUser(
+      neonUser.id,
+      neonUser.email,
+      neonUser.displayName,
+      role
     );
-    res.json(newUser.rows[0]);
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        neonUserId: user.neon_user_id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('User sync error:', error);
+    res.status(500).json({ error: 'Failed to sync user' });
   }
 });
 
-// User login
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
+// Get current user profile
+router.get('/profile', verifyNeonAuth, async (req, res) => {
   try {
-    const user = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const neonUser = req.user!;
+    const user = await getUserByNeonId(neonUser.id);
 
-    if (user.rows.length === 0) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found in database' });
     }
 
-    const validPassword = await bcrypt.compare(password, user.rows[0].password);
-
-    if (!validPassword) {
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign({ id: user.rows[0].id }, 'your_jwt_secret', { expiresIn: '1h' });
-    res.json({ token });
+    res.json({
+      id: user.id,
+      neonUserId: user.neon_user_id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at
+    });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error('Profile fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Update user role (admin only)
+router.patch('/role', verifyNeonAuth, async (req, res) => {
+  try {
+    const { userId, newRole } = req.body;
+    const currentUser = req.user!;
+
+    // Get current user from database to check role
+    const user = await getUserByNeonId(currentUser.id);
+
+    if (!user || user.role !== 'agency') {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    // Update the target user's role
+    const result = await pool.query(
+      'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [newRole, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      user: result.rows[0]
+    });
+  } catch (error: any) {
+    console.error('Role update error:', error);
+    res.status(500).json({ error: 'Failed to update user role' });
+  }
+});
+
+// Get all users (agency only)
+router.get('/users', verifyNeonAuth, async (req, res) => {
+  try {
+    const currentUser = req.user!;
+    const user = await getUserByNeonId(currentUser.id);
+
+    if (!user || user.role !== 'agency') {
+      return res.status(403).json({ error: 'Insufficient permissions' });
+    }
+
+    const result = await pool.query('SELECT id, neon_user_id, email, name, role, created_at FROM users ORDER BY created_at DESC');
+
+    res.json({
+      users: result.rows
+    });
+  } catch (error: any) {
+    console.error('Users fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
 
