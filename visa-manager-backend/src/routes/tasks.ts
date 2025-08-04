@@ -88,7 +88,7 @@ router.get('/:id', verifyNeonAuth, async (req, res) => {
     // If user is a partner, ensure they can only see their own tasks
     if (user.role === 'partner') {
       query += ' AND t.assigned_to = $2';
-      params.push(dbUserId);
+      params.push(dbUserId?.toString() || '0');
     }
 
     const task = await pool.query(query, params);
@@ -121,7 +121,7 @@ router.put('/:id', verifyNeonAuth, async (req, res) => {
 
     if (user.role === 'partner') {
       taskQuery += ' AND assigned_to = $2';
-      taskParams.push(dbUserId);
+      taskParams.push(dbUserId?.toString() || "0");
     }
 
     const existingTask = await pool.query(taskQuery, taskParams);
@@ -195,7 +195,7 @@ router.patch('/:id/complete', verifyNeonAuth, async (req, res) => {
 
     if (user.role === 'partner') {
       taskQuery += ' AND assigned_to = $2';
-      taskParams.push(dbUserId);
+      taskParams.push(dbUserId?.toString() || "0");
     }
 
     const existingTask = await pool.query(taskQuery, taskParams);
