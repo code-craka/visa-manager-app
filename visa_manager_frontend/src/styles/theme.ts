@@ -5,15 +5,20 @@ export const theme = {
     background: '#F5F5F5',
     text: '#333333',
     error: '#FF0000',
+    success: '#4CAF50',
+    warning: '#FF9800',
   },
   spacing: {
     small: 8,
     medium: 16,
     large: 24,
+    xlarge: 32,
   },
   fontSizes: {
     small: 12,
     medium: 16,
     large: 20,
+    header: 24,
+    title: 28,
   },
 };

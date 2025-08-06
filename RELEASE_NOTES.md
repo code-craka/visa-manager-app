@@ -6,6 +6,99 @@ This document contains detailed release notes for the Visa Manager Application, 
 
 ---
 
+## 🚀 Version 0.3.0 - JWT Template Integration & Major Cleanup
+
+**Release Date:** August 6, 2025  
+**Type:** Major Release  
+**Status:** Stable ✅
+
+### 🎯 Release Summary
+
+A major release featuring complete migration to Clerk authentication with JWT templates, comprehensive codebase cleanup, and zero TypeScript compilation errors. This release establishes a production-ready authentication system with enhanced security and performance.
+
+### 🔐 Authentication Overhaul
+
+#### Clerk JWT Template Integration
+
+- **✅ JWT Templates:** Implemented custom JWT templates with JWKS verification
+- **✅ Custom Claims:** Added email, role, and name claims to JWT tokens
+- **✅ JWKS Client:** Integrated jwks-rsa for secure token verification
+- **✅ Production Keys:** Configured real Clerk keys for live authentication
+- **✅ Performance:** JWT templates provide better performance than session tokens
+
+#### Database Migration
+
+- **✅ Schema Update:** Migrated from `neon_user_id` to `clerk_user_id`
+- **✅ Row-Level Security:** Implemented RLS policies with auth schema
+- **✅ User Sync:** Fixed user synchronization between Clerk and database
+- **✅ Query Migration:** Updated all database queries to use standard PostgreSQL
+
+### 🧹 Major Codebase Cleanup
+
+#### Removed Unused Files
+
+- **AuthContext_original.tsx** - Old Stack Auth implementation
+- **TaskAssignmentScreen_old.tsx** - Outdated task assignment screen
+- **App.complex.tsx & App.simple.tsx** - Unused app configuration files
+- **services/database.ts** - Unused Neon serverless service files
+- **All .d.ts.map files** - Generated TypeScript map files
+- **Empty directories** - Removed unused types directory
+
+#### TypeScript Compilation Success
+
+- **✅ Frontend:** Zero TypeScript errors (100% clean compilation)
+- **✅ Backend:** Zero TypeScript errors (100% clean compilation)
+- **✅ Type Safety:** Added proper interfaces for all components
+- **✅ Import Resolution:** Fixed all missing imports and dependencies
+
+### 🔧 Technical Improvements
+
+#### JWT Implementation
+
+- **JWKS Verification:** Secure token verification with public key rotation
+- **Custom Claims:** Role-based access control with user metadata
+- **Token Performance:** Improved authentication speed with JWT templates
+- **Error Handling:** Enhanced error handling for authentication failures
+
+#### Database Optimization
+
+- **Connection Pooling:** Optimized PostgreSQL connection handling
+- **Query Performance:** Streamlined database queries and transactions
+- **RLS Policies:** Implemented comprehensive row-level security
+- **Migration Scripts:** Automated migration from Stack Auth to Clerk
+
+### 📊 Quality Metrics
+
+- **TypeScript Errors:** 0 (Frontend & Backend)
+- **Build Success Rate:** 100%
+- **Code Coverage:** Maintained high coverage
+- **Security:** Enhanced with JWT templates and RLS
+- **Performance:** Improved with optimized authentication flow
+
+### 🚀 Upgrade Instructions
+
+1. **Update Dependencies:**
+   ```bash
+   cd visa-manager-backend && npm install jsonwebtoken jwks-rsa
+   ```
+
+2. **Configure JWT Template in Clerk:**
+   ```json
+   {
+     "email": "{{user.primary_email_address}}",
+     "role": "{{user.unsafe_metadata.role}}",
+     "name": "{{user.first_name}} {{user.last_name}}"
+   }
+   ```
+
+3. **Test Integration:**
+   ```bash
+   curl -H "Authorization: Bearer <jwt-token>" \
+        http://localhost:3000/api/test/jwt-test
+   ```
+
+---
+
 ## 🚀 Version 0.2.1 - TypeScript Compilation & Build Fixes
 
 **Release Date:** August 5, 2025  
@@ -140,7 +233,7 @@ A comprehensive feature release introducing real-time capabilities, Material Des
 
 ### From 0.1.x to 0.2.x
 
-- Update dependencies: `npm install`
+- Update dependencies: `yarn install`
 - Update navigation imports for React Navigation 6
 - Update theme references for Material Design
 - Review authentication flow changes

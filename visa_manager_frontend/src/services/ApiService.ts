@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext';
 
-// Backend API base URL - adjust this to match your backend server
-const API_BASE_URL = 'http://localhost:3000/api';
+// Backend API base URL - use 10.0.2.2 for Android emulator or your computer's IP for physical device
+const API_BASE_URL = 'http://10.0.2.2:3000/api';
 
 export interface ApiResponse<T = any> {
   success?: boolean;

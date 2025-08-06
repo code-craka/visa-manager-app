@@ -4,7 +4,15 @@ This document outlines the version control strategy for the Visa Manager App mon
 
 ## Current Release Information
 
-### Version 0.2.1 - Latest Release ✅
+### Version 0.3.0 - Latest Release ✅
+
+- **Release Date:** August 6, 2025
+- **Type:** Major Release
+- **Git Tag:** `v0.3.0`
+- **Status:** Production Ready
+- **Changes:** JWT template integration, major codebase cleanup, zero TypeScript errors
+
+### Version 0.2.1 - Previous Release
 
 - **Release Date:** August 5, 2025
 - **Type:** Patch Release
@@ -53,7 +61,7 @@ Each commit message consists of a **header**, a **body**, and a **footer**.
   - `refactor`: A code change that neither fixes a bug nor adds a feature
   - `perf`: A code change that improves performance
   - `test`: Adding missing tests or correcting existing tests
-  - `build`: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+  - `build`: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, yarn)
   - `ci`: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
   - `chore`: Other changes that don't modify src or test files
   - `revert`: Reverts a previous commit

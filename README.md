@@ -4,10 +4,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.80.2-blue?logo=react)](https://reactnative.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-18.x-green?logo=node.js)](https://nodejs.org/)
+[![Yarn](https://img.shields.io/badge/Yarn-v1.22.x-blue?logo=yarn)](https://classic.yarnpkg.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.x-blue?logo=postgresql)](https://www.postgresql.org/)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?logo=github)](https://github.com/code-craka/visa-manager-app)
 [![Code Quality](https://img.shields.io/badge/Code%20Quality-Excellent-brightgreen?logo=codeclimate)](https://github.com/code-craka/visa-manager-app)
-[![Version](https://img.shields.io/badge/Version-0.2.1-blue?logo=semver)](https://github.com/code-craka/visa-manager-app/releases)
+[![Version](https://img.shields.io/badge/Version-0.3.0-blue?logo=semver)](https://github.com/code-craka/visa-manager-app/releases)
 [![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey?logo=mobile)](https://github.com/code-craka/visa-manager-app)
 [![WebSocket](https://img.shields.io/badge/Real--time-WebSocket-orange?logo=socket.io)](https://github.com/code-craka/visa-manager-app)
 [![Material Design](https://img.shields.io/badge/UI-Material%20Design-blue?logo=material-design)](https://material.io/)
@@ -19,15 +20,15 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 
 ## ✨ Latest Updates
 
-### 🚀 Version 0.2.1 (Current) - August 5, 2025
+### 🚀 Version 0.3.0 (Current) - August 6, 2025
 
-- **🔧 TypeScript Compilation Fixes** - Zero compilation errors (37 → 0)
-- **🏗️ Build Optimization** - Successful backend compilation with exit code 0
-- **🔐 Authentication Enhancement** - Streamlined auth middleware for development
-- **📊 Database Integration** - Fixed all query parameter type conversions
-- **⚡ Development Workflow** - Optimized build process and error handling
-- **🧹 Codebase Cleanup** - Comprehensive duplicate detection and removal
-- **📚 Documentation Enhancement** - Advanced README with status badges
+- **🔐 JWT Template Integration** - Migrated from Stack Auth to Clerk with JWT templates
+- **🧹 Major Codebase Cleanup** - Removed all unused/old files and dependencies
+- **✅ Zero TypeScript Errors** - Complete frontend and backend compilation success
+- **🔧 Authentication Overhaul** - Implemented JWKS verification with custom claims
+- **📊 Database Migration** - Updated from Stack Auth to Clerk user IDs with RLS
+- **🎯 Performance Optimization** - JWT templates for better token performance
+- **📚 Documentation Update** - Comprehensive docs with latest architecture changes
 
 ### 🔴 Version 0.2.0 - Real-time & Material Design
 
@@ -45,7 +46,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 | **Backend** | ✅ Active | 95% | 13 files | 2,417 lines |
 | **Database** | ✅ Connected | 100% | PostgreSQL | Neon Cloud |
 | **WebSocket** | ✅ Live | Real-time | Socket.io | Auto-reconnect |
-| **Authentication** | ✅ Working | Mock + Backend | JWT | Stack Auth Ready |
+| **Authentication** | ✅ Working | JWT Templates | Clerk | JWKS Verified |
 | **Build System** | ✅ Passing | TypeScript | Zero Errors | Optimized |
 | **Code Quality** | ✅ Excellent | SHA256 Verified | Zero Duplicates | Clean |
 
@@ -150,7 +151,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 #### 🛠️ Development Tools
 
 - **Build System:** TypeScript 4.9.5 with strict mode
-- **Package Manager:** npm with lock file versioning
+- **Package Manager:** Yarn v1 (1.22.x) with yarn.lock versioning
 - **Code Quality:** ESLint + Prettier configuration
 - **Testing:** Jest framework for unit and integration tests
 - **Version Control:** Git with semantic versioning
@@ -198,9 +199,14 @@ visa-manager-backend/
 ### Prerequisites
 
 - Node.js (>=18)
-- npm (Node Package Manager)
+- Yarn v1 (1.22.x) - Install globally: `npm install -g yarn@1.22.x`
 - PostgreSQL database (Neon recommended)
 - React Native development environment setup (Android Studio/Xcode)
+
+**Verify Yarn Installation:**
+```bash
+yarn --version  # Should show 1.22.x
+```
 
 ### Installation
 
@@ -215,22 +221,22 @@ visa-manager-backend/
 
     ```bash
     cd visa-manager-backend
-    npm install
+    yarn install
     # Create a .env file and add your Neon PostgreSQL connection string
     # DATABASE_URL="your_neon_connection_string"
-    npm run build
-    npm start
+    yarn build
+    yarn start
     ```
 
 3. **Frontend Setup:**
 
     ```bash
     cd ../visa_manager_frontend
-    npm install
+    yarn install
     # Link native dependencies (for iOS)
     npx pod-install
     # Run on Android or iOS emulator/device
-    npm run android # or npm run ios
+    yarn android # or yarn ios
     ```
 
 ## Project Structure
@@ -269,9 +275,10 @@ visa-manager-app/
 
 ### 📖 Quick Reference
 
-- **Current Version:** v0.2.1 (Stable)
-- **Previous Version:** v0.2.0 (Real-time features)
-- **Git Tags:** `v0.2.1`, `v0.2.0`
+- **Current Version:** v0.3.0 (JWT Template Integration)
+- **Previous Version:** v0.2.3 (Package Manager Migration)
+- **Git Tags:** `v0.3.0`, `v0.2.3`, `v0.2.2`, `v0.2.1`
+- **Package Manager:** Yarn v1 (1.22.x) - `yarn --version`
 - **Build Status:** ✅ Successful (0 TypeScript errors)
 - **Code Quality:** ✅ Zero duplicates verified
 - **Dependencies:** Up-to-date and secure
@@ -287,15 +294,21 @@ git clone https://github.com/code-craka/visa-manager-app.git
 cd visa-manager-app
 
 # Backend setup
-cd visa-manager-backend && npm install && npm run build && npm start
+cd visa-manager-backend && yarn install && yarn build && yarn start
 
 # Frontend setup (new terminal)
-cd visa_manager_frontend && npm install && npm run android
+cd visa_manager_frontend && yarn install && yarn android
 ```
 
 ## Contributing
 
-Contributions are welcome! Please see `CONTRIBUTING.md` (if available) for guidelines.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+
+- Setting up the development environment with Yarn v1
+- Running the application and available scripts  
+- Code quality standards and testing requirements
+- Git workflow and commit conventions
+- Package management best practices
 
 ## License
 

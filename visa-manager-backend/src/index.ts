@@ -7,6 +7,7 @@ import clientRoutes from './routes/clients.js';
 import taskRoutes from './routes/tasks.js';
 import notificationRoutes from './routes/notifications.js';
 import dashboardRoutes from './routes/dashboard.js';
+import testRoutes from './routes/test.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/test', testRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

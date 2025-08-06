@@ -5,6 +5,85 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-08-06
+
+### Added
+
+#### JWT Template Integration
+- **Clerk JWT Templates** - Implemented custom JWT templates with JWKS verification
+- **Custom Claims Support** - Added email, role, and name claims to JWT tokens
+- **JWKS Client Integration** - Added jwks-rsa for secure token verification
+- **JWT Test Endpoint** - Created `/api/test/jwt-test` for integration testing
+
+#### Authentication Overhaul
+- **Clerk Migration** - Complete migration from Stack Auth to Clerk authentication
+- **Database Schema Update** - Migrated from `neon_user_id` to `clerk_user_id`
+- **Row-Level Security** - Implemented RLS policies with auth schema
+- **Real Clerk Keys** - Configured production Clerk keys for live authentication
+
+### Changed
+
+#### Major Codebase Cleanup
+- **Removed Unused Files** - Deleted 8+ old/unused files causing TypeScript errors
+- **Fixed TypeScript Compilation** - Achieved zero compilation errors in both frontend and backend
+- **Updated Database Queries** - Migrated from Neon serverless to standard PostgreSQL queries
+- **Improved Error Handling** - Enhanced auth middleware with proper JWT verification
+
+#### Performance Improvements
+- **JWT Templates** - Replaced session tokens with JWT templates for better performance
+- **Database Optimization** - Streamlined database queries and connection handling
+- **Build Process** - Optimized TypeScript compilation and build pipeline
+
+### Removed
+
+#### Cleanup Operations
+- **AuthContext_original.tsx** - Removed old Stack Auth implementation
+- **TaskAssignmentScreen_old.tsx** - Removed outdated task assignment screen
+- **App.complex.tsx & App.simple.tsx** - Removed unused app configuration files
+- **services/database.ts** - Removed unused Neon serverless service files
+- **All .d.ts.map files** - Cleaned up generated TypeScript map files
+- **Empty directories** - Removed unused types directory
+
+### Fixed
+
+#### TypeScript & Compilation Issues
+- **Frontend Compilation** - Fixed all TypeScript errors (0 errors)
+- **Backend Compilation** - Fixed all TypeScript errors (0 errors)
+- **Duplicate Properties** - Fixed duplicate style properties in LoginScreen
+- **Import Errors** - Resolved all missing import and dependency issues
+- **Type Safety** - Added proper TypeScript interfaces for all components
+
+#### Authentication & Database
+- **JWT Verification** - Fixed JWT token verification with proper JWKS integration
+- **Database Migrations** - Fixed user ID migration from Stack Auth to Clerk
+- **Auth Middleware** - Updated middleware to handle JWT templates correctly
+- **User Sync** - Fixed user synchronization between Clerk and database
+
+## [0.2.3] - 2025-08-05
+
+### Changed
+
+#### Package Manager Migration
+
+- **Migrated from npm to Yarn v1 (1.22.x)**
+  - Updated all documentation to use Yarn commands instead of npm
+  - Updated README.md, CONTRIBUTING.md, and all setup instructions
+  - Changed `package-lock.json` references to `yarn.lock`
+  - Updated CI/CD configuration examples to use Yarn
+  - Added Yarn installation and verification instructions
+  - Updated quick start commands and development workflow
+
+### Added
+
+#### Documentation Enhancement
+
+- **Created comprehensive CONTRIBUTING.md**
+  - Detailed setup instructions with Yarn v1
+  - Development workflow and available scripts
+  - Package management guidelines and best practices
+  - Git workflow and commit conventions
+  - Code quality standards and testing requirements
+
 ## [0.2.2] - 2025-08-05
 
 ### Added

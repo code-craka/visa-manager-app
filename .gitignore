@@ -7,6 +7,10 @@ pnpm-debug.log*
 /.pnp
 .pnp.js
 
+# Lock files (prefer yarn.lock over package-lock.json)
+package-lock.json
+**/package-lock.json
+
 # Production builds
 /dist/
 /build/
@@ -104,8 +108,14 @@ coverage/
 # Dependency directories
 jspm_packages/
 
-# Optional npm cache directory
+# Optional npm cache directory (legacy)
 .npm
+
+# Yarn cache and directories
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
 # Optional eslint cache
 .eslintcache
@@ -113,7 +123,7 @@ jspm_packages/
 # Optional REPL history
 .node_repl_history
 
-# Output of 'npm pack'
+# Output of 'yarn pack' and 'npm pack'
 *.tgz
 
 # Yarn Integrity file

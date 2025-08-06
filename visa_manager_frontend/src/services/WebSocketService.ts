@@ -41,9 +41,9 @@ class WebSocketService {
   private token: string | null = null;
 
   constructor() {
-    // Use environment variable or fallback to localhost
+    // Use 10.0.2.2 for Android emulator or your computer's IP for physical device
     this.baseUrl = __DEV__ 
-      ? 'ws://localhost:3000' 
+      ? 'ws://10.0.2.2:3000' 
       : 'wss://your-production-domain.com';
   }
 

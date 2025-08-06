@@ -11,10 +11,7 @@ First, you will need to run **Metro**, the JavaScript build tool for React Nativ
 To start the Metro dev server, run the following command from the root of your React Native project:
 
 ```sh
-# Using npm
-npm start
-
-# OR using Yarn
+# Using Yarn (recommended)
 yarn start
 ```
 
@@ -25,10 +22,7 @@ With Metro running, open a new terminal window/pane from the root of your React 
 ### Android
 
 ```sh
-# Using npm
-npm run android
-
-# OR using Yarn
+# Using Yarn (recommended)
 yarn android
 ```
 
@@ -51,10 +45,7 @@ bundle exec pod install
 For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
 
 ```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
+# Using Yarn (recommended)
 yarn ios
 ```
 
@@ -66,7 +57,7 @@ This is one way to run your app — you can also build it directly from Android 
 
 Now that you have successfully run the app, let's make changes!
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
 
 When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
 
@@ -85,6 +76,46 @@ You've successfully run and modified your React Native App. :partying_face:
 # Troubleshooting
 
 If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+
+## Common Issues
+
+### Java Version Incompatibility
+
+If you see an error like this:
+
+```
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=/Library/Java/JavaVirtualMachines/temurin-24.jdk/Contents/Home ... }
+Actual: DefaultDaemonContext[javaHome=/Users/rihan/Library/Java/JavaVirtualMachines/jbrsdk_jcef-17.0.14/Contents/Home ... ]
+```
+
+This means Gradle is trying to use Java 24 but your system is configured with Java 17. To fix this:
+
+1. Edit `android/gradle.properties` and set:
+   ```
+   org.gradle.java.home=/Users/rihan/Library/Java/JavaVirtualMachines/jbrsdk_jcef-17.0.14/Contents/Home
+   ```
+   
+2. Or install Java 24 and make sure it's in your PATH
+
+3. If using Android Studio, check File > Settings > Build, Execution, Deployment > Build Tools > Gradle and set the JDK location
+
+### Gradle Build Failures
+
+If the build fails with other errors:
+
+1. Try cleaning the project:
+   ```
+   cd android
+   ./gradlew clean
+   ```
+
+2. Make sure all dependencies are up-to-date:
+   ```
+   yarn install
+   ```
+
+3. Check that your NDK version matches what's specified in `android/build.gradle`
 
 # Learn More
 
