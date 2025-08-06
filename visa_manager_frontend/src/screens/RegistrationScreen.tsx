@@ -1,164 +1,67 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, ScrollView, ActivityIndicator } from 'react-native';
-import { Input, Button, ButtonGroup } from 'react-native-elements';
+import { View, Text, Alert, ScrollView, Modal, StyleSheet } from 'react-native';
+import { Button, ButtonGroup } from 'react-native-elements';
+import { SignUp } from '@clerk/clerk-react';
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../styles/theme';
 
 const RegistrationScreen = ({ navigation }: any) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedRoleIndex, setSelectedRoleIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const { signUp, syncUserWithBackend } = useAuth();
+  const { signUp, showSignUp, setShowSignUp, setShowSignIn, syncUserWithBackend } = useAuth();
   const roles = ['Partner', 'Agency'];
   const roleValues: ('partner' | 'agency')[] = ['partner', 'agency'];
 
-  const validateForm = () => {
-    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return false;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
-      return false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return false;
-    }
-
-    return true;
+  const handleSignUp = () => {
+    signUp();
   };
 
-  const handleRegister = async () => {
-    if (!validateForm()) return;
+  const handleSignIn = () => {
+    setShowSignIn(true);
+    setShowSignUp(false);
+  };
 
+  const handleAfterSignUp = async () => {
     try {
-      setIsLoading(true);
-
-      // Step 1: Create user with Neon Auth
-      await signUp(email.trim(), password, name.trim());
-
-      // Step 2: Sync user with backend and set role
+      // Sync user with backend and set role after successful signup
       await syncUserWithBackend(roleValues[selectedRoleIndex]);
-
       Alert.alert(
         'Success',
-        'Account created successfully! You can now log in.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        'Account created successfully! Welcome to Visa Manager.',
       );
-
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Post-signup sync error:', error);
       Alert.alert(
-        'Registration Failed',
-        error.message || 'Unable to create account. Please try again.'
+        'Setup Incomplete',
+        'Account created but role setup failed. You can set your role later in settings.'
       );
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: '#fff' }}
-      contentContainerStyle={{
-        padding: theme.spacing.large,
-        justifyContent: 'center',
-        minHeight: '100%'
-      }}
-    >
-      <Text style={{
-        fontSize: theme.fontSizes.header,
-        fontWeight: 'bold',
-        marginBottom: theme.spacing.large,
-        textAlign: 'center',
-        color: theme.colors.primary
-      }}>
-        Create Account
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <Text style={styles.title}>
+        Join Visa Manager
       </Text>
 
-      <Input
-        placeholder="Full Name"
-        value={name}
-        onChangeText={setName}
-        leftIcon={{ type: 'material', name: 'person', color: theme.colors.primary }}
-        inputStyle={{ color: '#333' }}
-        disabled={isLoading}
-      />
+      <Text style={styles.subtitle}>
+        Choose your account type and create your account
+      </Text>
 
-      <Input
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        leftIcon={{ type: 'material', name: 'email', color: theme.colors.primary }}
-        inputStyle={{ color: '#333' }}
-        disabled={isLoading}
-      />
-
-      <Input
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        leftIcon={{ type: 'material', name: 'lock', color: theme.colors.primary }}
-        inputStyle={{ color: '#333' }}
-        disabled={isLoading}
-      />
-
-      <Input
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        leftIcon={{ type: 'material', name: 'lock-outline', color: theme.colors.primary }}
-        inputStyle={{ color: '#333' }}
-        disabled={isLoading}
-      />
-
-      <View style={{ marginVertical: theme.spacing.medium }}>
-        <Text style={{
-          fontSize: theme.fontSizes.body,
-          marginBottom: theme.spacing.small,
-          color: '#333',
-          fontWeight: '600'
-        }}>
+      <View style={styles.roleSection}>
+        <Text style={styles.roleTitle}>
           Select Account Type:
         </Text>
         <ButtonGroup
           onPress={setSelectedRoleIndex}
           selectedIndex={selectedRoleIndex}
           buttons={roles}
-          containerStyle={{
-            marginBottom: theme.spacing.medium,
-            borderRadius: 8,
-            borderColor: theme.colors.primary
-          }}
-          selectedButtonStyle={{ backgroundColor: theme.colors.primary }}
-          selectedTextStyle={{ color: '#fff' }}
-          textStyle={{ color: theme.colors.primary }}
-          disabled={isLoading}
+          containerStyle={styles.buttonGroup}
+          selectedButtonStyle={styles.selectedButton}
+          selectedTextStyle={styles.selectedButtonText}
+          textStyle={styles.buttonText}
         />
-        <Text style={{
-          fontSize: theme.fontSizes.small,
-          color: '#666',
-          textAlign: 'center',
-          fontStyle: 'italic'
-        }}>
+        <Text style={styles.roleDescription}>
           {selectedRoleIndex === 0
             ? 'Partner: Handle tasks assigned by agencies'
             : 'Agency: Create clients and assign tasks to partners'
@@ -167,36 +70,150 @@ const RegistrationScreen = ({ navigation }: any) => {
       </View>
 
       <Button
-        title={isLoading ? 'Creating Account...' : 'Register'}
-        onPress={handleRegister}
-        buttonStyle={{
-          backgroundColor: theme.colors.primary,
-          marginVertical: theme.spacing.medium,
-          borderRadius: 8,
-          paddingVertical: 12
+        title="Create Account"
+        onPress={handleSignUp}
+        buttonStyle={styles.signUpButton}
+        titleStyle={styles.buttonTitleStyle}
+        icon={{
+          name: 'person-add',
+          type: 'material',
+          size: 20,
+          color: 'white',
+          style: { marginRight: 10 }
         }}
-        disabled={isLoading}
-        loading={isLoading}
       />
 
       <Button
-        title="Already have an account? Login"
+        title="Already have an account? Sign In"
         type="clear"
-        onPress={() => navigation.navigate('Login')}
-        titleStyle={{ color: theme.colors.primary }}
-        disabled={isLoading}
+        onPress={handleSignIn}
+        titleStyle={styles.linkText}
       />
 
-      {isLoading && (
-        <View style={{
-          marginTop: theme.spacing.medium,
-          alignItems: 'center'
-        }}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Text style={styles.termsText}>
+        By signing up, you agree to our Terms of Service and Privacy Policy
+      </Text>
+
+      {/* Clerk Sign Up Modal */}
+      <Modal
+        visible={showSignUp}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowSignUp(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Create Account</Text>
+            <Button
+              title="Close"
+              type="clear"
+              onPress={() => setShowSignUp(false)}
+              titleStyle={{ color: theme.colors.primary }}
+            />
+          </View>
+          <SignUp 
+            routing="virtual"
+            signInUrl="#"
+            afterSignUpUrl="#"
+            afterSignInUrl="#"
+          />
         </View>
-      )}
+      </Modal>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff'
+  },
+  contentContainer: {
+    padding: theme.spacing.large,
+    justifyContent: 'center',
+    minHeight: '100%'
+  },
+  title: {
+    fontSize: theme.fontSizes.header,
+    fontWeight: 'bold',
+    marginBottom: theme.spacing.large,
+    textAlign: 'center',
+    color: theme.colors.primary
+  },
+  subtitle: {
+    fontSize: theme.fontSizes.medium,
+    marginBottom: theme.spacing.large,
+    textAlign: 'center',
+    color: theme.colors.text
+  },
+  roleSection: {
+    marginVertical: theme.spacing.medium
+  },
+  roleTitle: {
+    fontSize: theme.fontSizes.medium,
+    marginBottom: theme.spacing.small,
+    color: '#333',
+    fontWeight: '600',
+    textAlign: 'center'
+  },
+  buttonGroup: {
+    marginBottom: theme.spacing.medium,
+    borderRadius: 8,
+    borderColor: theme.colors.primary
+  },
+  selectedButton: {
+    backgroundColor: theme.colors.primary
+  },
+  selectedButtonText: {
+    color: '#fff'
+  },
+  buttonText: {
+    color: theme.colors.primary
+  },
+  roleDescription: {
+    fontSize: theme.fontSizes.small,
+    color: '#666',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginBottom: theme.spacing.large
+  },
+  signUpButton: {
+    backgroundColor: theme.colors.primary,
+    marginVertical: theme.spacing.medium,
+    borderRadius: 8,
+    paddingVertical: 15
+  },
+  buttonTitleStyle: {
+    fontSize: theme.fontSizes.medium,
+    fontWeight: '600'
+  },
+  linkText: {
+    color: theme.colors.primary
+  },
+  termsText: {
+    fontSize: theme.fontSizes.small,
+    marginTop: theme.spacing.large,
+    textAlign: 'center',
+    color: '#666',
+    lineHeight: 20
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing.medium,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
+  },
+  modalTitle: {
+    fontSize: theme.fontSizes.large,
+    fontWeight: 'bold',
+    color: theme.colors.primary
+  }
+});
 
 export default RegistrationScreen;

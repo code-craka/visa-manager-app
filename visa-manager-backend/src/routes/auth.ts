@@ -1,29 +1,64 @@
 import { Router } from 'express';
-import { createOrUpdateUser, getUserByNeonId } from '../models/User.js';
-import { verifyNeonAuth } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import pool from '../db.js';
 
 const router = Router();
 
-// Sync user with Neon Auth - called after Neon Auth authentication
-router.post('/sync-user', verifyNeonAuth, async (req, res) => {
+interface DbUser {
+  id: number;
+  clerk_user_id: string;
+  email: string;
+  name: string;
+  role: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Sync user with Clerk - called after Clerk authentication
+router.post('/sync-user', requireAuth, async (req, res) => {
   try {
     const { role = 'partner' } = req.body;
-    const neonUser = req.user!;
+    const clerkUser = req.user!;
 
-    // Create or update user in our database
-    const user = await createOrUpdateUser(
-      neonUser.id,
-      neonUser.email,
-      neonUser.displayName,
-      role
+    // Use database connection with RLS
+
+    // Check if user already exists
+    const existingUsersResult = await pool.query(
+      'SELECT * FROM users WHERE clerk_user_id = $1',
+      [clerkUser.id]
     );
+    const existingUsers = existingUsersResult.rows as DbUser[];
+
+    let user: DbUser;
+    if (existingUsers.length === 0) {
+      // Create new user
+      const newUserResult = await pool.query(
+        'INSERT INTO users (clerk_user_id, email, name, role) VALUES ($1, $2, $3, $4) RETURNING *',
+        [clerkUser.id, clerkUser.email, clerkUser.displayName, role]
+      );
+      
+      if (!newUserResult.rows[0]) {
+        throw new Error('Failed to create user');
+      }
+      user = newUserResult.rows[0] as DbUser;
+    } else {
+      // Update existing user
+      const updatedUserResult = await pool.query(
+        'UPDATE users SET name = $1, role = $2, updated_at = CURRENT_TIMESTAMP WHERE clerk_user_id = $3 RETURNING *',
+        [clerkUser.displayName, role, clerkUser.id]
+      );
+      
+      if (!updatedUserResult.rows[0]) {
+        throw new Error('Failed to update user');
+      }
+      user = updatedUserResult.rows[0] as DbUser;
+    }
 
     res.json({
       success: true,
       user: {
         id: user.id,
-        neonUserId: user.neon_user_id,
+        clerkUserId: user.clerk_user_id,
         email: user.email,
         name: user.name,
         role: user.role
@@ -36,23 +71,35 @@ router.post('/sync-user', verifyNeonAuth, async (req, res) => {
 });
 
 // Get current user profile
-router.get('/profile', verifyNeonAuth, async (req, res) => {
+router.get('/profile', requireAuth, async (req, res) => {
   try {
-    const neonUser = req.user!;
-    const user = await getUserByNeonId(neonUser.id);
+    const clerkUser = req.user!;
 
-    if (!user) {
+    const usersResult = await pool.query(
+      'SELECT * FROM users WHERE clerk_user_id = $1',
+      [clerkUser.id]
+    );
+    const users = usersResult.rows as DbUser[];
+
+    if (users.length === 0) {
       return res.status(404).json({ error: 'User not found in database' });
     }
 
+    const user = users[0];
+    if (!user) {
+      return res.status(404).json({ error: 'User data not found' });
+    }
+    
     res.json({
-      id: user.id,
-      neonUserId: user.neon_user_id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at
+      user: {
+        id: user.id,
+        clerkUserId: user.clerk_user_id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at
+      }
     });
   } catch (error: any) {
     console.error('Profile fetch error:', error);
@@ -60,20 +107,24 @@ router.get('/profile', verifyNeonAuth, async (req, res) => {
   }
 });
 
-// Update user role (admin only)
-router.patch('/role', verifyNeonAuth, async (req, res) => {
+// Update user role (agency only)
+router.patch('/role', requireAuth, async (req, res) => {
   try {
     const { userId, newRole } = req.body;
     const currentUser = req.user!;
 
-    // Get current user from database to check role
-    const user = await getUserByNeonId(currentUser.id);
+    // Check if current user is agency
+    const currentUsersResult = await pool.query(
+      'SELECT * FROM users WHERE clerk_user_id = $1',
+      [currentUser.id]
+    );
+    const currentUsers = currentUsersResult.rows as DbUser[];
 
-    if (!user || user.role !== 'agency') {
+    if (currentUsers.length === 0 || !currentUsers[0] || currentUsers[0].role !== 'agency') {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
-    // Update the target user's role
+    // Update the target user's role (using admin pool for cross-user updates)
     const result = await pool.query(
       'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       [newRole, userId]
@@ -94,16 +145,23 @@ router.patch('/role', verifyNeonAuth, async (req, res) => {
 });
 
 // Get all users (agency only)
-router.get('/users', verifyNeonAuth, async (req, res) => {
+router.get('/users', requireAuth, async (req, res) => {
   try {
     const currentUser = req.user!;
-    const user = await getUserByNeonId(currentUser.id);
 
-    if (!user || user.role !== 'agency') {
+    // Check if current user is agency
+    const currentUsersResult = await pool.query(
+      'SELECT * FROM users WHERE clerk_user_id = $1',
+      [currentUser.id]
+    );
+    const currentUsers = currentUsersResult.rows as DbUser[];
+
+    if (currentUsers.length === 0 || !currentUsers[0] || currentUsers[0].role !== 'agency') {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
-    const result = await pool.query('SELECT id, neon_user_id, email, name, role, created_at FROM users ORDER BY created_at DESC');
+    // Use admin pool to get all users (agencies can see all users)
+    const result = await pool.query('SELECT id, clerk_user_id, email, name, role, created_at FROM users ORDER BY created_at DESC');
 
     res.json({
       users: result.rows

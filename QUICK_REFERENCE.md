@@ -6,14 +6,14 @@
 
 ```bash
 cd visa-manager-backend
-npm start  # Runs on http://localhost:3000
+yarn start  # Runs on http://localhost:3000
 ```
 
 ### Start Frontend Metro Bundler  
 
 ```bash
 cd visa_manager_frontend
-npm start  # Runs on http://localhost:8081
+yarn start  # Runs on http://localhost:8081
 ```
 
 ## 📋 Current Status

@@ -1,24 +1,25 @@
+import 'react-native-gesture-handler';
 import React from 'react';
-import { ThemeProvider } from 'react-native-elements';
+import { Provider as PaperProvider } from 'react-native-paper';
 import { AuthProvider } from './src/context/AuthContext';
+import { RealtimeProvider } from './src/context/RealtimeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { theme } from './src/styles/theme';
 
 const App = () => {
   return (
-    <ThemeProvider theme={{
+    <PaperProvider theme={{
       colors: {
         primary: theme.colors.primary,
-        secondary: theme.colors.secondary,
-        success: '#4CAF50',
-        warning: '#FF9800',
-        error: '#F44336',
-      },
+        background: theme.colors.background,
+      }
     }}>
       <AuthProvider>
-        <AppNavigator />
+        <RealtimeProvider>
+          <AppNavigator />
+        </RealtimeProvider>
       </AuthProvider>
-    </ThemeProvider>
+    </PaperProvider>
   );
 };
 

@@ -4,7 +4,6 @@
 
 # Xcode
 #
-build/
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -20,7 +19,7 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
-**/.xcode.env.local
+ios/.xcode.env.local
 
 # Android/IntelliJ
 #
@@ -33,7 +32,6 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
-.kotlin/
 
 # node.js
 #
@@ -57,7 +55,7 @@ yarn-error.log
 *.jsbundle
 
 # Ruby / CocoaPods
-**/Pods/
+/ios/Pods/
 /vendor/bundle/
 
 # Temporary files created by Metro to check the health of the file watcher
@@ -66,10 +64,32 @@ yarn-error.log
 # testing
 /coverage
 
-# Yarn
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# React Native
+react-native-config/
+.vscode/
+.vscode/settings.json
+
+# Flipper
+android/app/debug.keystore
+
+# Gradle Wrapper
+!gradle/wrapper/gradle-wrapper.jar
+
+# Build outputs
+android/app/build/
+android/build/
+ios/build/
+
+# JVM crash logs
+hs_err_pid*
+
+# Generated files
+android/app/src/main/assets/
+android/app/src/main/res/raw/

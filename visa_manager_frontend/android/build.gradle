@@ -1,21 +1,41 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
 buildscript {
     ext {
+        // Updated versions to fix compatibility issues
         buildToolsVersion = "35.0.0"
         minSdkVersion = 24
         compileSdkVersion = 35
-        targetSdkVersion = 35
-        ndkVersion = "27.1.12297006"
-        kotlinVersion = "2.1.20"
+        targetSdkVersion = 34
+        kotlinVersion = "1.9.0" // Recommended version for modern React Native projects
+        ndkVersion = "25.2.9519653" // Updated NDK version to fix hermes tooling error
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle")
-        classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
+        // The Android Gradle plugin and its version
+        classpath("com.android.tools.build:gradle:7.4.2")
+        // The React Native Gradle plugin
+        classpath("com.facebook.react:react-native-gradle-plugin:0.80.2")
+        // The Kotlin Gradle plugin
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
     }
 }
 
+// All projects configuration
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    tasks.withType(JavaCompile) {
+        // Set Java compatibility versions to 17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+// Apply the React Native root project plugin
 apply plugin: "com.facebook.react.rootproject"

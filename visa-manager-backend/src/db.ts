@@ -25,11 +25,49 @@ pool.on('error', (err) => {
 // Initialize database tables
 export const initializeDatabase = async () => {
   try {
-    // Users table with Neon Auth integration
+    // First, handle migration from neon_user_id to clerk_user_id
+    console.log('Checking for database migration...');
+    
+    // Check if users table exists and what columns it has
+    const tableCheck = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'users' AND table_schema = 'public'
+    `);
+    
+    const columns = tableCheck.rows.map(row => row.column_name);
+    const hasNeonUserId = columns.includes('neon_user_id');
+    const hasClerkUserId = columns.includes('clerk_user_id');
+    
+    if (hasNeonUserId && !hasClerkUserId) {
+      console.log('Migrating from neon_user_id to clerk_user_id...');
+      
+      // Add clerk_user_id column
+      await pool.query(`ALTER TABLE users ADD COLUMN clerk_user_id VARCHAR(255)`);
+      
+      // Copy data (you'll need to manually update these with actual Clerk user IDs)
+      await pool.query(`UPDATE users SET clerk_user_id = neon_user_id WHERE clerk_user_id IS NULL`);
+      
+      // Make it NOT NULL and UNIQUE
+      await pool.query(`ALTER TABLE users ALTER COLUMN clerk_user_id SET NOT NULL`);
+      await pool.query(`ALTER TABLE users ADD CONSTRAINT users_clerk_user_id_unique UNIQUE (clerk_user_id)`);
+      
+      // Drop old column and constraint
+      await pool.query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_neon_user_id_key`);
+      await pool.query(`ALTER TABLE users DROP COLUMN IF EXISTS neon_user_id`);
+      
+      // Update index
+      await pool.query(`DROP INDEX IF EXISTS idx_users_neon_id`);
+      await pool.query(`CREATE INDEX IF NOT EXISTS idx_users_clerk_id ON users(clerk_user_id)`);
+      
+      console.log('Migration completed successfully!');
+    }
+
+    // Users table with Clerk integration
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        neon_user_id VARCHAR(255) UNIQUE NOT NULL,
+        clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         name VARCHAR(255) NOT NULL,
         role VARCHAR(50) DEFAULT 'partner' CHECK (role IN ('agency', 'partner')),
@@ -85,7 +123,7 @@ export const initializeDatabase = async () => {
 
     // Create indexes for better performance
     await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_users_neon_id ON users(neon_user_id);
+      CREATE INDEX IF NOT EXISTS idx_users_clerk_id ON users(clerk_user_id);
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
       CREATE INDEX IF NOT EXISTS idx_tasks_client ON tasks(client_id);
       CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to);
@@ -93,6 +131,9 @@ export const initializeDatabase = async () => {
       CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
       CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
     `);
+
+    console.log('Database tables initialized successfully');
+    console.log('Note: RLS policies will be set up manually in the database');
 
     console.log('Database tables initialized successfully');
   } catch (error) {

@@ -168,14 +168,14 @@ const stack = new StackClientApp({
 
 ```bash
 cd visa-manager-backend
-npm start  # Runs on http://localhost:3000
+yarn start  # Runs on http://localhost:3000
 ```
 
 #### Frontend Metro Bundler (Terminal 2):
 
 ```bash
 cd visa_manager_frontend
-npm start  # Metro bundler on http://localhost:8081
+yarn start  # Metro bundler on http://localhost:8081
 ```
 
 ### **Environment Variables** (`.env`)
@@ -333,8 +333,8 @@ DATABASE_URL=[neon_postgresql_connection_url]
 
 ### **Immediate Next Steps**
 
-1. **Start Backend**: `cd visa-manager-backend && npm start`
-2. **Start Frontend**: `cd visa_manager_frontend && npm start`
+1. **Start Backend**: `cd visa-manager-backend && yarn start`
+2. **Start Frontend**: `cd visa_manager_frontend && yarn start`
 3. **Verify Integration**: Test authentication flow end-to-end
 4. **Begin Feature Testing**: Validate all screens and API endpoints
 

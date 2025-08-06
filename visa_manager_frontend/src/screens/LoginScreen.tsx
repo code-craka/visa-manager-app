@@ -1,106 +1,153 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, ActivityIndicator } from 'react-native';
-import { Input, Button } from 'react-native-elements';
+import { View, Text, Modal, StyleSheet } from 'react-native';
+import { Button } from 'react-native-elements';
+import { SignIn } from '@clerk/clerk-react';
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../styles/theme';
 
 const LoginScreen = ({ navigation }: any) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, showSignIn, setShowSignIn, setShowSignUp } = useAuth();
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+  const handleSignIn = () => {
+    signIn();
+  };
 
-    try {
-      setIsLoading(true);
-      await signIn(email.trim(), password);
-      // Navigation will be handled by the AuthNavigator based on auth state
-    } catch (error: any) {
-      console.error('Login error:', error);
-      Alert.alert(
-        'Login Failed',
-        error.message || 'Invalid email or password. Please try again.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSignUp = () => {
+    setShowSignUp(true);
+    setShowSignIn(false);
   };
 
   return (
-    <View style={{
-      flex: 1,
-      padding: theme.spacing.large,
-      justifyContent: 'center',
-      backgroundColor: '#fff'
-    }}>
-      <Text style={{
-        fontSize: theme.fontSizes.header,
-        fontWeight: 'bold',
-        marginBottom: theme.spacing.large,
-        textAlign: 'center',
-        color: theme.colors.primary
-      }}>
-        Visa Manager Login
+    <View style={styles.container}>
+      <Text style={styles.title}>
+        Visa Manager
       </Text>
 
-      <Input
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        leftIcon={{ type: 'material', name: 'email', color: theme.colors.primary }}
-        inputStyle={{ color: '#333' }}
-        disabled={isLoading}
-      />
-
-      <Input
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        leftIcon={{ type: 'material', name: 'lock', color: theme.colors.primary }}
-        inputStyle={{ color: '#333' }}
-        disabled={isLoading}
-      />
+      <Text style={styles.subtitle}>
+        Sign in to manage your visa workflow
+      </Text>
 
       <Button
-        title={isLoading ? 'Signing In...' : 'Login'}
-        onPress={handleLogin}
-        buttonStyle={{
-          backgroundColor: theme.colors.primary,
-          marginVertical: theme.spacing.medium,
-          borderRadius: 8,
-          paddingVertical: 12
+        title="Sign In"
+        onPress={handleSignIn}
+        buttonStyle={styles.signInButton}
+        titleStyle={styles.buttonText}
+        icon={{
+          name: 'login',
+          type: 'material',
+          size: 20,
+          color: 'white',
+          style: { marginRight: 10 }
         }}
-        disabled={isLoading}
-        loading={isLoading}
       />
 
       <Button
-        title="Don't have an account? Register"
-        type="clear"
-        onPress={() => navigation.navigate('Register')}
-        titleStyle={{ color: theme.colors.primary }}
-        disabled={isLoading}
+        title="Create Account"
+        onPress={handleSignUp}
+        buttonStyle={styles.signUpButton}
+        titleStyle={styles.buttonText}
+        type="outline"
+        icon={{
+          name: 'person-add',
+          type: 'material',
+          size: 20,
+          color: theme.colors.primary,
+          style: { marginRight: 10 }
+        }}
       />
 
-      {isLoading && (
-        <View style={{
-          marginTop: theme.spacing.medium,
-          alignItems: 'center'
-        }}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+      <Text style={styles.termsText}>
+        By continuing, you agree to our Terms of Service and Privacy Policy
+      </Text>
+
+      {/* Clerk Sign In Modal */}
+      <Modal
+        visible={showSignIn}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowSignIn(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Sign In</Text>
+            <Button
+              title="Close"
+              type="clear"
+              onPress={() => setShowSignIn(false)}
+              titleStyle={{ color: theme.colors.primary }}
+            />
+          </View>
+          <SignIn 
+            routing="virtual"
+            signUpUrl="#"
+            afterSignInUrl="#"
+          />
         </View>
-      )}
+      </Modal>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: theme.spacing.large,
+    justifyContent: 'center',
+    backgroundColor: '#fff'
+  },
+  title: {
+    fontSize: theme.fontSizes.header,
+    fontWeight: 'bold',
+    marginBottom: theme.spacing.large,
+    textAlign: 'center',
+    color: theme.colors.primary
+  },
+  subtitle: {
+    fontSize: theme.fontSizes.medium,
+    marginBottom: theme.spacing.xlarge,
+    textAlign: 'center',
+    color: theme.colors.text
+  },
+  signInButton: {
+    backgroundColor: theme.colors.primary,
+    marginVertical: theme.spacing.medium,
+    borderRadius: 8,
+    paddingVertical: 15
+  },
+  signUpButton: {
+    borderColor: theme.colors.primary,
+    marginVertical: theme.spacing.small,
+    borderRadius: 8,
+    paddingVertical: 15
+  },
+  buttonText: {
+    fontSize: theme.fontSizes.medium,
+    fontWeight: '600'
+  },
+  termsText: {
+    fontSize: theme.fontSizes.small,
+    marginTop: theme.spacing.large,
+    textAlign: 'center',
+    color: '#666',
+    lineHeight: 20
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing.medium,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
+  },
+  modalTitle: {
+    fontSize: theme.fontSizes.large,
+    fontWeight: 'bold',
+    color: theme.colors.primary
+  }
+});
 
 export default LoginScreen;
