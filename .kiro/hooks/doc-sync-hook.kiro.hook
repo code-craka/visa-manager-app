@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "name": "Documentation Sync",
+  "description": "Automatically checks and updates project documentation when significant files are saved, ensuring README, CHANGELOG, PRD, and API docs stay current with code changes",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "package.json",
+      "README.md",
+      "visa-manager-backend/src/models/*.ts",
+      "visa-manager-backend/src/routes/*.ts",
+      "visa_manager_frontend/src/screens/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "When significant files (package.json, README.md, screens/*.tsx, routes/*.ts, models/*.ts) are saved, automatically:\n- Check if README.md needs updates for new features or version changes\n- Suggest CHANGELOG.md updates for significant changes\n- Update API documentation if new endpoints are added\n- Verify version consistency between frontend and backend package.json\n- Check if PRD.md implementation status needs updating\n- Ensure documentation reflects current Clerk authentication setup\n- Validate that technology stack information is accurate\n\nOur documentation includes README.md, CHANGELOG.md, PRD.md, and API endpoint documentation. Current version is 0.3.0 with Clerk JWT templates."
+  }
+}

@@ -1,153 +1,386 @@
-import { Router, Request, Response } from 'express';
-import pool from '../db';
-import { verifyNeonAuth } from '../middleware/auth';
-import { getUserByNeonId, getDatabaseUserIdByNeonId } from '../models/User.js';
+// Client Management REST API Routes
+// Following the established patterns from the copilot instructions
 
-const router = Router();
+import express, { Request, Response } from 'express';
+import { requireAuth, requireRole } from '../middleware/auth';
+import { ClientService } from '../services/ClientService';
+import {
+  ClientError,
+  ClientValidationError
+} from '../services/ClientError';
+import {
+  Client,
+  CreateClientRequest,
+  UpdateClientRequest,
+  ClientFilters,
+  VisaType,
+  ClientStatus
+} from '../models/Client';
 
-// Create a new client (agency only)
-router.post('/', verifyNeonAuth, async (req: Request, res: Response) => {
-  try {
-    const { name, passport, visaType, email, phone } = req.body;
-    const currentUser = req.user!;
+// Extended Request interface for authenticated requests
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: 'agency' | 'partner';
+    name: string;
+  };
+}
 
-    // Check if user is agency
-    const user = await getUserByNeonId(currentUser.id);
-    if (!user || user.role !== 'agency') {
-      return res.status(403).json({ error: 'Only agencies can create clients' });
-    }
+// Standard API response interfaces
+interface ApiSuccessResponse<T = any> {
+  success: true;
+  data: T;
+  message?: string;
+  pagination?: PaginationInfo;
+}
 
-    const newClient = await pool.query(
-      'INSERT INTO clients (name, passport, visa_type, email, phone, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [name, passport, visaType, email, phone, user.id]
-    );
-    res.json(newClient.rows[0]);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+interface ApiErrorResponse {
+  success: false;
+  error: string;
+  errorCode?: string;
+  details?: any;
+}
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+class ClientController {
+  private clientService: ClientService;
+
+  constructor() {
+    this.clientService = new ClientService();
   }
-});
 
-// Get all clients
-router.get('/', verifyNeonAuth, async (req, res) => {
-  try {
-    const currentUser = req.user!;
-    const dbUserId = await getDatabaseUserIdByNeonId(currentUser.id);
-    const user = await getUserByNeonId(currentUser.id);
+  /**
+   * Create a new client
+   * POST /api/clients
+   */
+  async create(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const clientData: CreateClientRequest = req.body;
+      const userId = req.user!.id;
 
-    if (!user || !dbUserId) {
-      return res.status(404).json({ error: 'User not found' });
+      const client = await this.clientService.createClient(clientData, userId);
+
+      res.status(201).json({
+        success: true,
+        data: client,
+        message: 'Client created successfully'
+      } as ApiSuccessResponse<Client>);
+    } catch (error: any) {
+      if (error instanceof ClientValidationError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode,
+          details: error.validationErrors
+        } as ApiErrorResponse);
+      } else if (error instanceof ClientError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode
+        } as ApiErrorResponse);
+      } else {
+        console.error('Unexpected error in client creation:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          errorCode: 'INTERNAL_ERROR'
+        } as ApiErrorResponse);
+      }
     }
-
-    let query = 'SELECT * FROM clients';
-    let params: any[] = [];
-
-    // If user is a partner, only show clients with tasks assigned to them
-    if (user.role === 'partner') {
-      query = `
-        SELECT DISTINCT c.* FROM clients c 
-        INNER JOIN tasks t ON c.id = t.client_id 
-        WHERE t.assigned_to = $1
-      `;
-      params = [dbUserId];
-    }
-
-    const allClients = await pool.query(query, params);
-    res.json(allClients.rows);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
   }
-});
 
-// Get a single client
-router.get('/:id', verifyNeonAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const currentUser = req.user!;
-    const dbUserId = await getDatabaseUserIdByNeonId(currentUser.id);
-    const user = await getUserByNeonId(currentUser.id);
+  /**
+   * Get all clients with filtering, searching, sorting, and pagination
+   * GET /api/clients
+   */
+  async getAll(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.id;
 
-    if (!user || !dbUserId) {
-      return res.status(404).json({ error: 'User not found' });
+      // Parse query parameters with proper typing
+      const filters: ClientFilters = {
+        search: req.query.search as string,
+        status: req.query.status as ClientStatus,
+        visaType: req.query.visaType as VisaType,
+        sortBy: req.query.sortBy as 'name' | 'date' | 'visaType',
+        sortOrder: req.query.sortOrder as 'asc' | 'desc',
+        page: parseInt(req.query.page as string) || 1,
+        limit: parseInt(req.query.limit as string) || 20
+      };
+
+      // Validate pagination parameters
+      if (filters.page < 1) filters.page = 1;
+      if (filters.limit < 1 || filters.limit > 100) filters.limit = 20;
+
+      const [clients, totalCount] = await Promise.all([
+        this.clientService.getClients(userId, filters),
+        this.clientService.getClientCount(userId, filters)
+      ]);
+
+      const pagination: PaginationInfo = {
+        page: filters.page!,
+        limit: filters.limit!,
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / filters.limit!)
+      };
+
+      res.json({
+        success: true,
+        data: clients,
+        pagination
+      } as ApiSuccessResponse<Client[]>);
+    } catch (error: any) {
+      console.error('Error retrieving clients:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve clients',
+        errorCode: 'RETRIEVAL_FAILED'
+      } as ApiErrorResponse);
     }
-
-    let query = 'SELECT * FROM clients WHERE id = $1';
-    let params = [id];
-
-    // If user is a partner, ensure they have access to this client
-    if (user.role === 'partner') {
-      query = `
-        SELECT DISTINCT c.* FROM clients c 
-        INNER JOIN tasks t ON c.id = t.client_id 
-        WHERE c.id = $1 AND t.assigned_to = $2
-      `;
-      params = [id, dbUserId?.toString() || ''];
-    }
-
-    const client = await pool.query(query, params);
-
-    if (client.rows.length === 0) {
-      return res.status(404).json({ error: 'Client not found or access denied' });
-    }
-
-    res.json(client.rows[0]);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
   }
-});
 
-// Update a client (agency only)
-router.put('/:id', verifyNeonAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, passport, visaType, email, phone } = req.body;
-    const currentUser = req.user!;
+  /**
+   * Get client by ID
+   * GET /api/clients/:id
+   */
+  async getById(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const clientId = parseInt(req.params.id);
+      const userId = req.user!.id;
 
-    // Check if user is agency
-    const user = await getUserByNeonId(currentUser.id);
-    if (!user || user.role !== 'agency') {
-      return res.status(403).json({ error: 'Only agencies can update clients' });
+      if (isNaN(clientId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid client ID',
+          errorCode: 'INVALID_ID'
+        } as ApiErrorResponse);
+      }
+
+      const client = await this.clientService.getClientById(clientId, userId);
+
+      res.json({
+        success: true,
+        data: client
+      } as ApiSuccessResponse<Client>);
+    } catch (error: any) {
+      if (error instanceof ClientError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode
+        } as ApiErrorResponse);
+      } else {
+        console.error('Unexpected error retrieving client:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          errorCode: 'INTERNAL_ERROR'
+        } as ApiErrorResponse);
+      }
     }
-
-    const updatedClient = await pool.query(
-      'UPDATE clients SET name = $1, passport = $2, visa_type = $3, email = $4, phone = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *',
-      [name, passport, visaType, email, phone, id]
-    );
-
-    if (updatedClient.rows.length === 0) {
-      return res.status(404).json({ error: 'Client not found' });
-    }
-
-    res.json(updatedClient.rows[0]);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
   }
-});
 
-// Delete a client (agency only)
-router.delete('/:id', verifyNeonAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const currentUser = req.user!;
+  /**
+   * Update client
+   * PUT /api/clients/:id
+   */
+  async update(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const clientId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      const updates: UpdateClientRequest = req.body;
 
-    // Check if user is agency
-    const user = await getUserByNeonId(currentUser.id);
-    if (!user || user.role !== 'agency') {
-      return res.status(403).json({ error: 'Only agencies can delete clients' });
+      if (isNaN(clientId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid client ID',
+          errorCode: 'INVALID_ID'
+        } as ApiErrorResponse);
+      }
+
+      const client = await this.clientService.updateClient(clientId, updates, userId);
+
+      res.json({
+        success: true,
+        data: client,
+        message: 'Client updated successfully'
+      } as ApiSuccessResponse<Client>);
+    } catch (error: any) {
+      if (error instanceof ClientValidationError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode,
+          details: error.validationErrors
+        } as ApiErrorResponse);
+      } else if (error instanceof ClientError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode
+        } as ApiErrorResponse);
+      } else {
+        console.error('Unexpected error updating client:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          errorCode: 'INTERNAL_ERROR'
+        } as ApiErrorResponse);
+      }
     }
-
-    const deletedClient = await pool.query(
-      'DELETE FROM clients WHERE id = $1 RETURNING *',
-      [id]
-    );
-
-    if (deletedClient.rows.length === 0) {
-      return res.status(404).json({ error: 'Client not found' });
-    }
-
-    res.json({ message: 'Client deleted successfully', client: deletedClient.rows[0] });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
   }
-});
+
+  /**
+   * Delete client
+   * DELETE /api/clients/:id
+   */
+  async delete(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const clientId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      if (isNaN(clientId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid client ID',
+          errorCode: 'INVALID_ID'
+        } as ApiErrorResponse);
+      }
+
+      await this.clientService.deleteClient(clientId, userId);
+
+      res.json({
+        success: true,
+        message: 'Client deleted successfully'
+      } as ApiSuccessResponse);
+    } catch (error: any) {
+      if (error instanceof ClientError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode
+        } as ApiErrorResponse);
+      } else {
+        console.error('Unexpected error deleting client:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          errorCode: 'INTERNAL_ERROR'
+        } as ApiErrorResponse);
+      }
+    }
+  }
+
+  /**
+   * Get client statistics for dashboard
+   * GET /api/clients/stats
+   */
+  async getStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const stats = await this.clientService.getClientStats(userId);
+
+      res.json({
+        success: true,
+        data: stats
+      } as ApiSuccessResponse);
+    } catch (error: any) {
+      console.error('Error retrieving client statistics:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve client statistics',
+        errorCode: 'STATS_FAILED'
+      } as ApiErrorResponse);
+    }
+  }
+
+  /**
+   * Get clients for task assignment (simplified view)
+   * GET /api/clients/for-assignment
+   */
+  async getForAssignment(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.id;
+      const excludeIds = req.query.exclude ?
+        (req.query.exclude as string).split(',').map(id => parseInt(id)).filter(id => !isNaN(id)) :
+        [];
+
+      const clients = await this.clientService.getClientsForTaskAssignment(userId, excludeIds);
+
+      res.json({
+        success: true,
+        data: clients
+      } as ApiSuccessResponse);
+    } catch (error: any) {
+      console.error('Error retrieving clients for assignment:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve clients for assignment',
+        errorCode: 'RETRIEVAL_FAILED'
+      } as ApiErrorResponse);
+    }
+  }
+}
+
+// Initialize router and controller
+const router = express.Router();
+const clientController = new ClientController();
+
+// Route definitions with proper middleware and role-based access control
+
+// Stats endpoint (should come before /:id to avoid conflicts)
+router.get('/stats',
+  requireAuth,
+  requireRole(['agency']),
+  clientController.getStats.bind(clientController)
+);
+
+// For assignment endpoint
+router.get('/for-assignment',
+  requireAuth,
+  requireRole(['agency']),
+  clientController.getForAssignment.bind(clientController)
+);
+
+// Create new client (agency only)
+router.post('/',
+  requireAuth,
+  requireRole(['agency']),
+  clientController.create.bind(clientController)
+);
+
+// Get all clients (both agencies and partners can view, but with different access levels)
+router.get('/',
+  requireAuth,
+  clientController.getAll.bind(clientController)
+);
+
+// Get specific client by ID
+router.get('/:id',
+  requireAuth,
+  clientController.getById.bind(clientController)
+);
+
+// Update client (agency only)
+router.put('/:id',
+  requireAuth,
+  requireRole(['agency']),
+  clientController.update.bind(clientController)
+);
+
+// Delete client (agency only)
+router.delete('/:id',
+  requireAuth,
+  requireRole(['agency']),
+  clientController.delete.bind(clientController)
+);
 
 export default router;

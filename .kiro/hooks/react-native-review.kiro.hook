@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "React Native Code Review",
+  "description": "Automatically reviews React Native component files for proper useCallback/useMemo implementation, React Native Paper usage, Electric Violet brand color compliance, TypeScript interfaces, memory leak prevention, React.memo suggestions, and React Navigation patterns.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "visa_manager_frontend/src/screens/*.tsx",
+      "visa_manager_frontend/src/components/*.tsx",
+      "visa_manager_frontend/src/context/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Please review this React Native component file for:\n\n1. **Performance Optimization:**\n   - Check for proper useCallback and useMemo implementation to prevent unnecessary re-renders\n   - Identify functions and objects that should be memoized\n   - Suggest React.memo implementation where beneficial for component optimization\n\n2. **Material Design Consistency:**\n   - Verify React Native Paper components are used instead of basic React Native components\n   - Check for consistent Material Design patterns and component usage\n   - Ensure proper theming integration\n\n3. **Brand Color Compliance:**\n   - Verify Electric Violet (#8D05D4) brand color is used correctly for primary elements\n   - Check color consistency across the component\n   - Suggest proper color usage from theme\n\n4. **TypeScript Best Practices:**\n   - Validate that TypeScript interfaces are defined for all props and state\n   - Check for proper type annotations and strict TypeScript compliance\n   - Ensure no 'any' types are used inappropriately\n\n5. **Memory Leak Prevention:**\n   - Check for proper cleanup in useEffect hooks\n   - Verify event listeners and subscriptions are properly removed\n   - Identify potential memory leaks and suggest fixes\n\n6. **React Navigation Integration:**\n   - Verify navigation integration follows React Navigation patterns\n   - Check for proper navigation prop typing\n   - Ensure consistent navigation patterns\n\nProvide specific, actionable feedback with code examples where improvements are needed. Focus on performance, maintainability, and adherence to our React Native app standards using Material Design with React Native Paper, TypeScript strict mode, and Electric Violet primary color."
+  }
+}

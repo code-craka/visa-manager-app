@@ -1,11 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { createClerkClient, verifyToken } from '@clerk/backend';
 import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
-
-const clerkClient = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY!,
-});
 
 // JWKS client for JWT verification
 const jwksClientInstance = jwksClient({
@@ -106,16 +101,16 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
 // Middleware to check user role
 export const requireRole = (allowedRoles: string[]) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
-        return res.status(401).json({
+        return _res.status(401).json({
           error: 'Unauthorized: User not authenticated'
         });
       }
 
       if (!req.user.role || !allowedRoles.includes(req.user.role)) {
-        return res.status(403).json({
+        return _res.status(403).json({
           error: 'Forbidden: Insufficient permissions'
         });
       }
@@ -123,7 +118,7 @@ export const requireRole = (allowedRoles: string[]) => {
       next();
     } catch (error) {
       console.error('Role check error:', error);
-      return res.status(500).json({
+      return _res.status(500).json({
         error: 'Internal server error during role verification'
       });
     }

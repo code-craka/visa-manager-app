@@ -1,0 +1,38 @@
+{
+  "name": "TypeScript Compilation Check",
+  "description": "Automatically check TypeScript compilation and report errors when TypeScript files are saved",
+  "trigger": {
+    "type": "file_save",
+    "patterns": [
+      "**/*.ts",
+      "**/*.tsx"
+    ],
+    "excludePatterns": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/*.d.ts"
+    ]
+  },
+  "conditions": [
+    {
+      "type": "file_exists",
+      "path": "tsconfig.json"
+    }
+  ],
+  "actions": [
+    {
+      "type": "agent_execution",
+      "prompt": "A TypeScript file has been saved. Please:\n1. Run TypeScript compilation check for both frontend and backend\n2. Report any compilation errors with file locations and line numbers\n3. If there are errors, suggest fixes based on our project standards\n4. If compilation is successful, confirm zero errors status\n\nFrontend path: visa_manager_frontend/\nBackend path: visa-manager-backend/\n\nUse commands:\n- Frontend: cd visa_manager_frontend && npx tsc --noEmit\n- Backend: cd visa-manager-backend && npm run build\n\nFollow our development standards for TypeScript strict mode and zero compilation errors requirement.",
+      "context": {
+        "include_file_content": true,
+        "include_project_structure": false,
+        "max_files": 5
+      }
+    }
+  ],
+  "settings": {
+    "debounce_ms": 2000,
+    "max_executions_per_hour": 30,
+    "enabled": true
+  }
+}

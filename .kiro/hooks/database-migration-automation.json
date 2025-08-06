@@ -1,0 +1,34 @@
+{
+  "name": "Database Migration Automation",
+  "description": "Automatically handle database migrations and schema validation when database models or migration files are modified",
+  "trigger": {
+    "type": "file_save",
+    "patterns": [
+      "**/models/*.ts",
+      "**/migrations/*.sql",
+      "**/db.ts"
+    ]
+  },
+  "conditions": [
+    {
+      "type": "file_exists",
+      "path": "visa-manager-backend/src/db.ts"
+    }
+  ],
+  "actions": [
+    {
+      "type": "agent_execution",
+      "prompt": "Database-related files have been modified. Please:\n\n1. **Analyze Changes**:\n   - Review the modified database files\n   - Identify schema changes or new models\n   - Check for migration requirements\n\n2. **Validate Database Models**:\n   - Ensure TypeScript interfaces match database schema\n   - Verify all required fields are defined\n   - Check for proper data types and constraints\n\n3. **Migration Management**:\n   - If new migration files exist, provide guidance on running them\n   - Suggest migration commands if schema changes detected\n   - Verify migration file naming follows our convention\n\n4. **RLS Policy Validation**:\n   - Check if Row-Level Security policies need updates\n   - Verify clerk_user_id integration for new tables\n   - Ensure auth schema compatibility\n\n5. **Connection Testing**:\n   - Verify database connection is working\n   - Test basic CRUD operations if applicable\n   - Check connection pooling configuration\n\nOur database setup:\n- PostgreSQL via Neon\n- Row-Level Security enabled\n- Clerk user ID integration\n- Standard PostgreSQL queries (no Neon serverless)\n\nProvide actionable recommendations and any required migration steps.",
+      "context": {
+        "include_file_content": true,
+        "include_project_structure": false,
+        "max_files": 5
+      }
+    }
+  ],
+  "settings": {
+    "debounce_ms": 5000,
+    "max_executions_per_hour": 10,
+    "enabled": true
+  }
+}

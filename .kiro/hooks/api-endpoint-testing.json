@@ -1,0 +1,36 @@
+{
+  "name": "API Endpoint Testing",
+  "description": "Automatically test API endpoints and validate responses when route files are modified",
+  "trigger": {
+    "type": "file_save",
+    "patterns": [
+      "**/routes/*.ts",
+      "**/middleware/*.ts"
+    ],
+    "excludePatterns": [
+      "**/routes/test.ts"
+    ]
+  },
+  "conditions": [
+    {
+      "type": "file_exists",
+      "path": "visa-manager-backend/src/index.ts"
+    }
+  ],
+  "actions": [
+    {
+      "type": "agent_execution",
+      "prompt": "API route files have been modified. Please:\n\n1. **Analyze Route Changes**:\n   - Review the modified route files\n   - Identify new endpoints or changes to existing ones\n   - Check middleware integration and authentication requirements\n\n2. **Validate API Structure**:\n   - Ensure RESTful conventions are followed\n   - Verify proper HTTP status codes are used\n   - Check error handling implementation\n   - Validate request/response TypeScript interfaces\n\n3. **Test Endpoint Functionality**:\n   - Provide curl commands for testing new/modified endpoints\n   - Test authentication-protected routes with JWT tokens\n   - Verify input validation is working\n   - Check error responses are properly formatted\n\n4. **Documentation Updates**:\n   - Suggest updates to API documentation if needed\n   - Provide example requests/responses\n   - Update endpoint reference if new routes added\n\n5. **Integration Verification**:\n   - Check if frontend integration needs updates\n   - Verify database queries are optimized\n   - Ensure proper error propagation\n\nOur API standards:\n- RESTful design with proper HTTP methods\n- JWT authentication with Clerk templates\n- Consistent error response format\n- TypeScript interfaces for all requests/responses\n- Standard PostgreSQL queries\n\nProvide testing commands and integration guidance.",
+      "context": {
+        "include_file_content": true,
+        "include_project_structure": false,
+        "max_files": 4
+      }
+    }
+  ],
+  "settings": {
+    "debounce_ms": 3000,
+    "max_executions_per_hour": 20,
+    "enabled": true
+  }
+}

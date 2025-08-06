@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "API Route Analyzer",
+  "description": "Automatically analyzes new or modified API endpoints for RESTful compliance, tests authentication with JWT tokens, verifies HTTP status codes and error handling, checks TypeScript interfaces, provides curl commands, validates input validation and error response formatting, and ensures database queries are optimized with proper error handling",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "visa-manager-backend/src/routes/*.ts",
+      "visa-manager-backend/src/middleware/*.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "When API route files are saved, analyze the modified endpoints and provide:\n\n1. **RESTful Compliance Analysis:**\n   - Check HTTP methods match REST conventions (GET for retrieval, POST for creation, PUT/PATCH for updates, DELETE for removal)\n   - Verify URL patterns follow REST standards (/resource, /resource/:id)\n   - Ensure proper use of HTTP status codes (200, 201, 400, 401, 403, 404, 500)\n\n2. **Authentication Testing:**\n   - Verify JWT token validation using Clerk JWKS verification\n   - Test endpoints with valid JWT tokens containing custom claims (email, role, name)\n   - Check for proper authentication middleware usage\n   - Validate role-based access control if implemented\n\n3. **Error Handling Verification:**\n   - Ensure all endpoints have try-catch blocks\n   - Check for consistent error response format\n   - Verify appropriate HTTP status codes for different error scenarios\n   - Test database connection error handling\n\n4. **TypeScript Interface Validation:**\n   - Check request/response interfaces are properly defined\n   - Verify type safety for all parameters and return values\n   - Ensure proper typing for database models and queries\n\n5. **Testing Commands:**\n   - Generate curl commands for testing each modified endpoint\n   - Include examples with JWT authentication headers\n   - Provide test data for POST/PUT requests\n   - Include both success and error scenario tests\n\n6. **Input Validation & Database Optimization:**\n   - Check for proper input validation and sanitization\n   - Verify SQL injection prevention measures\n   - Ensure database queries use connection pooling\n   - Check for proper error handling in database operations\n   - Verify Row-Level Security (RLS) policies are applied\n\n7. **PostgreSQL & Clerk Integration:**\n   - Ensure database queries follow PostgreSQL standards\n   - Verify Clerk JWT template integration\n   - Check custom claims usage in authorization logic\n   - Validate database migration compatibility\n\nFocus on the visa manager app's authentication system using Clerk JWT templates, PostgreSQL with RLS, and RESTful API design patterns. Provide actionable feedback and ready-to-use test commands."
+  }
+}

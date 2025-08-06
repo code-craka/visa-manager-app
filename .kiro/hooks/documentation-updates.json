@@ -1,0 +1,36 @@
+{
+  "name": "Documentation Updates",
+  "description": "Automatically suggest documentation updates when significant code changes are made",
+  "trigger": {
+    "type": "file_save",
+    "patterns": [
+      "**/package.json",
+      "**/README.md",
+      "**/src/screens/*.tsx",
+      "**/src/routes/*.ts",
+      "**/src/models/*.ts"
+    ]
+  },
+  "conditions": [
+    {
+      "type": "file_exists",
+      "path": "README.md"
+    }
+  ],
+  "actions": [
+    {
+      "type": "agent_execution",
+      "prompt": "Significant code changes detected. Please:\n\n1. **Analyze Changes Impact**:\n   - Review the modified files for documentation impact\n   - Identify new features, API changes, or architectural updates\n   - Check if version updates are needed\n\n2. **Documentation Assessment**:\n   - Check if README.md needs updates for new features\n   - Verify API documentation reflects current endpoints\n   - Assess if CHANGELOG.md should be updated\n   - Review if PRD.md status needs modification\n\n3. **Version Management**:\n   - If package.json version changed, suggest corresponding updates\n   - Check if git tags need to be created\n   - Verify version consistency across frontend/backend\n\n4. **Feature Documentation**:\n   - For new screens/components, suggest README updates\n   - For new API routes, provide endpoint documentation\n   - For new models, document database schema changes\n\n5. **Consistency Check**:\n   - Ensure documentation matches current implementation\n   - Verify technology stack information is accurate\n   - Check that status indicators reflect reality\n\nOur documentation standards:\n- README.md with current version and features\n- CHANGELOG.md with detailed version history\n- PRD.md with implementation status\n- API endpoint documentation\n- Database schema documentation\n\nProvide specific documentation update suggestions with exact content where possible.",
+      "context": {
+        "include_file_content": true,
+        "include_project_structure": true,
+        "max_files": 3
+      }
+    }
+  ],
+  "settings": {
+    "debounce_ms": 10000,
+    "max_executions_per_hour": 8,
+    "enabled": true
+  }
+}

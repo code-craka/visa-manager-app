@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "name": "Authentication Testing Hook",
+  "description": "Automatically tests JWT authentication endpoints, Clerk JWT template verification, JWKS functionality, environment variables, user synchronization, and Row-Level Security policies when authentication files are saved",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "visa-manager-backend/src/middleware/auth.ts",
+      "visa-manager-backend/src/routes/auth.ts",
+      "visa_manager_frontend/src/context/AuthContext.tsx",
+      "visa-manager-backend/.env",
+      "visa_manager_frontend/.env"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "When authentication files are modified, perform comprehensive testing of the JWT authentication system:\n\n1. **JWT Endpoint Testing**\n   - Test /api/test/jwt-test endpoint functionality\n   - Verify JWT token validation and parsing\n   - Check authentication middleware behavior\n   - Test protected route access\n\n2. **Clerk JWT Template Verification**\n   - Verify 'neon' JWT template is working correctly\n   - Test custom claims extraction (email, role, name)\n   - Validate JWT structure and payload\n   - Check token expiration handling\n\n3. **JWKS Verification Testing**\n   - Test JWKS endpoint: https://clerk.techsci.io/.well-known/jwks.json\n   - Verify RS256 algorithm signature validation\n   - Check public key retrieval and caching\n   - Test token signature verification\n\n4. **Environment Variables Validation**\n   - Verify Clerk production keys are properly set:\n     - CLERK_PUBLISHABLE_KEY=pk_live_Y2xlcmsudGVjaHNjaS5pbyQ\n     - CLERK_SECRET_KEY (backend)\n   - Check JWKS_URL configuration\n   - Validate database connection strings\n   - Confirm all required auth environment variables\n\n5. **User Synchronization Testing**\n   - Test Clerk user creation/update in PostgreSQL\n   - Verify clerk_user_id mapping\n   - Check user profile synchronization\n   - Test user role assignment\n\n6. **Row-Level Security (RLS) Testing**\n   - Verify RLS policies work with clerk_user_id\n   - Test data isolation between users\n   - Check policy enforcement on CRUD operations\n   - Validate security policy effectiveness\n\n7. **Backend Status & Testing Commands**\n   - Check if backend server is running on expected port\n   - If running, provide curl commands for testing:\n     ```bash\n     # Test JWT endpoint\n     curl -X GET http://localhost:3000/api/test/jwt-test \\\n       -H \"Authorization: Bearer YOUR_JWT_TOKEN\"\n     \n     # Test protected route\n     curl -X GET http://localhost:3000/api/protected \\\n       -H \"Authorization: Bearer YOUR_JWT_TOKEN\"\n     \n     # Test user sync\n     curl -X POST http://localhost:3000/api/auth/sync \\\n       -H \"Authorization: Bearer YOUR_JWT_TOKEN\" \\\n       -H \"Content-Type: application/json\"\n     ```\n   - If not running, provide startup instructions\n\n8. **Integration Testing**\n   - Test frontend AuthContext with backend authentication\n   - Verify token refresh mechanisms\n   - Check logout and session cleanup\n   - Test error handling and user feedback\n\nProvide detailed results for each test category, highlight any failures or issues, and suggest fixes for any problems found. Focus on the production Clerk configuration with pk_live_Y2xlcmsudGVjaHNjaS5pbyQ keys and JWKS verification."
+  }
+}

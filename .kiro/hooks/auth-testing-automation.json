@@ -1,0 +1,35 @@
+{
+  "name": "Authentication Testing Automation",
+  "description": "Automatically test JWT authentication endpoints when authentication-related files are modified",
+  "trigger": {
+    "type": "file_save",
+    "patterns": [
+      "**/middleware/auth.ts",
+      "**/routes/auth.ts",
+      "**/context/AuthContext.tsx",
+      "**/.env"
+    ]
+  },
+  "conditions": [
+    {
+      "type": "file_exists",
+      "path": "visa-manager-backend/src/routes/test.ts"
+    }
+  ],
+  "actions": [
+    {
+      "type": "agent_execution",
+      "prompt": "Authentication-related files have been modified. Please:\n\n1. **Verify JWT Template Configuration**:\n   - Check if Clerk JWT template 'neon' is properly configured\n   - Validate custom claims: email, role, name\n   - Confirm JWKS endpoint accessibility\n\n2. **Test Authentication Endpoints**:\n   - Test /api/test/jwt-test endpoint\n   - Verify JWT token verification is working\n   - Check user synchronization with database\n\n3. **Validate Environment Variables**:\n   - Confirm CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY are set\n   - Verify CLERK_JWKS_URL is accessible\n\n4. **Check Database Integration**:\n   - Verify clerk_user_id mapping is working\n   - Test RLS policies are functioning\n   - Confirm user role assignment\n\nProvide a summary of test results and any issues found. If backend is not running, provide instructions to start it.\n\nOur authentication uses:\n- Clerk JWT templates (not session tokens)\n- JWKS verification with RS256\n- Custom claims for role-based access\n- Production keys: pk_live_Y2xlcmsudGVjaHNjaS5pbyQ",
+      "context": {
+        "include_file_content": true,
+        "include_project_structure": false,
+        "max_files": 3
+      }
+    }
+  ],
+  "settings": {
+    "debounce_ms": 3000,
+    "max_executions_per_hour": 15,
+    "enabled": true
+  }
+}

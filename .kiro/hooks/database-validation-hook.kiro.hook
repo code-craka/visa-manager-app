@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Database Schema Validator",
+  "description": "Automatically validates database schema changes, TypeScript interface alignment, migration requirements, RLS policies, Clerk integration, and PostgreSQL connection configuration when database files are saved.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "visa-manager-backend/src/models/*.ts",
+      "visa-manager-backend/src/migrations/*.sql",
+      "visa-manager-backend/src/db.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "When database files are saved, perform comprehensive database validation:\n\n1. **Schema Analysis & Interface Validation:**\n   - Analyze changes in TypeScript model files (models/*.ts)\n   - Verify TypeScript interfaces match actual database schema\n   - Check for type mismatches between models and database columns\n   - Validate foreign key relationships and constraints\n\n2. **Migration Assessment:**\n   - Check if new migration files need to be created for schema changes\n   - Provide specific migration commands if needed\n   - Verify existing migration files for syntax and compatibility\n   - Ensure migration sequence is correct\n\n3. **Row-Level Security (RLS) Validation:**\n   - Verify RLS policies exist for all user data tables\n   - Check that new tables have appropriate RLS policies\n   - Validate policy syntax and effectiveness\n   - Ensure policies align with Clerk user ID structure\n\n4. **Clerk Integration Verification:**\n   - Confirm clerk_user_id fields are present in user-related tables\n   - Validate Clerk user ID integration in models\n   - Check authentication middleware compatibility\n   - Verify JWT claims alignment with database structure\n\n5. **Database Connection & Performance:**\n   - Test PostgreSQL connection using standard driver (not Neon serverless)\n   - Validate connection pooling configuration\n   - Check for optimal connection settings\n   - Test basic CRUD operations on affected tables\n\n6. **PostgreSQL Standards Compliance:**\n   - Ensure queries use standard PostgreSQL syntax\n   - Validate data types and constraints\n   - Check for performance optimization opportunities\n   - Verify indexing strategies\n\nProvide specific commands, code fixes, and recommendations for any issues found. Include migration scripts if schema changes are detected."
+  }
+}

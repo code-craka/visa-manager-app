@@ -1,0 +1,34 @@
+{
+  "name": "React Native Performance Check",
+  "description": "Automatically analyze React Native components for performance issues and suggest optimizations",
+  "trigger": {
+    "type": "file_save",
+    "patterns": [
+      "**/src/screens/*.tsx",
+      "**/src/components/*.tsx",
+      "**/src/context/*.tsx"
+    ]
+  },
+  "conditions": [
+    {
+      "type": "file_exists",
+      "path": "visa_manager_frontend/src/styles/theme.ts"
+    }
+  ],
+  "actions": [
+    {
+      "type": "agent_execution",
+      "prompt": "React Native component files have been modified. Please:\n\n1. **Performance Analysis**:\n   - Check for proper useCallback implementation\n   - Verify useMemo usage for expensive computations\n   - Identify potential memory leaks or missing cleanup\n   - Review dependency arrays for optimization\n\n2. **Material Design Compliance**:\n   - Ensure React Native Paper components are used consistently\n   - Verify theme usage follows our Electric Violet (#8D05D4) brand\n   - Check for proper spacing and typography implementation\n   - Validate Material Design patterns\n\n3. **TypeScript Best Practices**:\n   - Verify all props have proper TypeScript interfaces\n   - Check for any 'any' types that should be specific\n   - Ensure proper error handling with typed catch blocks\n   - Validate component export patterns\n\n4. **Code Quality Assessment**:\n   - Check for proper component structure and organization\n   - Verify navigation integration follows React Navigation patterns\n   - Ensure proper state management with Context API\n   - Review async operations and error handling\n\n5. **Optimization Suggestions**:\n   - Suggest React.memo implementation where beneficial\n   - Recommend virtual list usage for large datasets\n   - Identify opportunities for code splitting\n   - Suggest performance improvements\n\nOur React Native standards:\n- Material Design with React Native Paper\n- TypeScript strict mode with proper interfaces\n- Performance optimization with hooks\n- Electric Violet (#8D05D4) primary color\n- Proper cleanup and memory management\n\nProvide specific optimization recommendations and code examples where helpful.",
+      "context": {
+        "include_file_content": true,
+        "include_project_structure": false,
+        "max_files": 3
+      }
+    }
+  ],
+  "settings": {
+    "debounce_ms": 4000,
+    "max_executions_per_hour": 15,
+    "enabled": true
+  }
+}

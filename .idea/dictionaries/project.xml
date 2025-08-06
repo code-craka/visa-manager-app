@@ -3,8 +3,12 @@
     <words>
       <w>ampproject</w>
       <w>jridgewell</w>
+      <w>jsonwebtoken</w>
+      <w>jwks</w>
       <w>libexec</w>
+      <w>neondatabase</w>
       <w>postgre</w>
+      <w>snackbar</w>
       <w>stackframe</w>
     </words>
   </dictionary>
