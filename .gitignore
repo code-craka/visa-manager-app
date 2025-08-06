@@ -171,3 +171,7 @@ jspm_packages/
 /visa_manager_frontend/dist/
 /visa_manager_frontend/build/
 /visa_manager_frontend/.env
+
+# Development tools and automation
+.kiro/
+.github/copilot-instructions.md
