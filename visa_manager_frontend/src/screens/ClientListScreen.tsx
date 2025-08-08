@@ -330,6 +330,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
       {/* Search bar */}
       <Searchbar
         placeholder="Search clients by name, email, or visa type..."
+        value={state.searchQuery}
         onChangeText={debouncedSearch}
         style={styles.searchBar}
         iconColor={theme.colors.primary}
@@ -557,7 +558,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.small,
   },
   errorMessage: {
-    color: theme.colors.onErrorContainer,
+    color: theme.colors.error,
     marginBottom: theme.spacing.medium,
   },
   retryButton: {

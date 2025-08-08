@@ -27,9 +27,11 @@ export interface Client {
   email: string;
   phone?: string;
   visaType: VisaType;
+  visa_type?: string; // Legacy support
   status: ClientStatus;
   notes?: string;
   agencyId: string;
+  passport?: string; // Legacy field for display
   createdAt: string; // ISO string from API
   updatedAt: string; // ISO string from API
   createdBy: string;

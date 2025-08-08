@@ -1,4 +1,4 @@
-import { Notification } from './ApiService';
+import { Notification } from '../types/Common';
 
 export interface WebSocketMessage {
   type: 'notification' | 'task_update' | 'client_update' | 'stats_update';

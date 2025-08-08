@@ -8,7 +8,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.x-blue?logo=postgresql)](https://www.postgresql.org/)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?logo=github)](https://github.com/code-craka/visa-manager-app)
 [![Code Quality](https://img.shields.io/badge/Code%20Quality-Excellent-brightgreen?logo=codeclimate)](https://github.com/code-craka/visa-manager-app)
-[![Version](https://img.shields.io/badge/Version-0.3.0-blue?logo=semver)](https://github.com/code-craka/visa-manager-app/releases)
+[![Version](https://img.shields.io/badge/Version-0.3.1-blue?logo=semver)](https://github.com/code-craka/visa-manager-app/releases)
 [![Platform](https://img.shields.io/badge/Platform-iOS%20%7C%20Android-lightgrey?logo=mobile)](https://github.com/code-craka/visa-manager-app)
 [![WebSocket](https://img.shields.io/badge/Real--time-WebSocket-orange?logo=socket.io)](https://github.com/code-craka/visa-manager-app)
 [![Material Design](https://img.shields.io/badge/UI-Material%20Design-blue?logo=material-design)](https://material.io/)
@@ -20,7 +20,16 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 
 ## ✨ Latest Updates
 
-### 🚀 Version 0.3.0 (Current) - August 6, 2025
+### 🚀 Version 0.3.1 (Current) - August 8, 2025
+
+- **🏗️ Client Service Layer** - Complete backend ClientService implementation with CRUD operations
+- **✅ Comprehensive Testing** - 23 passing unit tests for ClientService with full coverage
+- **🔍 Input Validation** - Advanced validation schema with custom error handling
+- **📊 Statistics Calculation** - Client statistics and dashboard integration
+- **🛡️ Error Handling** - Custom ClientError classes with proper status codes
+- **🔒 Row-Level Security** - RLS enforcement for all client operations
+
+### 🔐 Version 0.3.0 - JWT Template Integration
 
 - **🔐 JWT Template Integration** - Migrated from Stack Auth to Clerk with JWT templates
 - **🧹 Major Codebase Cleanup** - Removed all unused/old files and dependencies
@@ -43,7 +52,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 | Component | Status | Coverage | Files | Lines |
 |-----------|--------|----------|-------|-------|
 | **Frontend** | ✅ Active | 98% | 16 files | 4,357 lines |
-| **Backend** | ✅ Active | 95% | 13 files | 2,417 lines |
+| **Backend** | ✅ Active | 98% | 15 files | 2,847 lines |
 | **Database** | ✅ Connected | 100% | PostgreSQL | Neon Cloud |
 | **WebSocket** | ✅ Live | Real-time | Socket.io | Auto-reconnect |
 | **Authentication** | ✅ Working | JWT Templates | Clerk | JWKS Verified |
@@ -52,7 +61,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 
 ### 🎯 Key Metrics
 
-- **Total Files**: 30 TypeScript/JavaScript files
+- **Total Files**: 32 TypeScript/JavaScript files
 - **Code Quality**: Zero duplicate files confirmed via SHA256 analysis  
 - **Build Status**: ✅ 0 TypeScript compilation errors
 - **Test Coverage**: Frontend and backend test suites ready
@@ -275,9 +284,9 @@ visa-manager-app/
 
 ### 📖 Quick Reference
 
-- **Current Version:** v0.3.0 (JWT Template Integration)
-- **Previous Version:** v0.2.3 (Package Manager Migration)
-- **Git Tags:** `v0.3.0`, `v0.2.3`, `v0.2.2`, `v0.2.1`
+- **Current Version:** v0.3.1 (Client Service Layer Implementation)
+- **Previous Version:** v0.3.0 (JWT Template Integration)
+- **Git Tags:** `v0.3.1`, `v0.3.0`, `v0.2.3`, `v0.2.2`, `v0.2.1`
 - **Package Manager:** Yarn v1 (1.22.x) - `yarn --version`
 - **Build Status:** ✅ Successful (0 TypeScript errors)
 - **Code Quality:** ✅ Zero duplicates verified

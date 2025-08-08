@@ -1,6 +1,9 @@
 // Material Design Theme Configuration for Visa Manager App
 // Following the established Electric Violet (#8D05D4) branding
 
+// Import the enums for use in this file
+import { ClientStatus, VisaType } from '../types/Client';
+
 export const theme = {
   colors: {
     primary: '#8D05D4', // Electric Violet - Brand Primary
@@ -22,6 +25,13 @@ export const theme = {
     onSecondary: '#ffffff',
     outline: '#79747e',
     outlineVariant: '#cac4cf',
+    text: '#1c1b1f', // Added missing text color
+  },
+  fontSizes: {
+    small: 12,
+    medium: 14,
+    large: 16,
+    header: 22,
   },
   spacing: {
     small: 8,
@@ -75,6 +85,3 @@ export const visaTypeIcons = {
   [VisaType.FAMILY]: 'account-group',
   [VisaType.TRANSIT]: 'airplane',
 };
-
-// Import the enums for use in this file
-import { ClientStatus, VisaType } from '../types/Client';

@@ -215,7 +215,14 @@ const DashboardScreen: React.FC<NavigationProps> = ({ navigation }) => {
     markNotificationAsRead 
   } = useRealtime();
   
-  const [stats, setStats] = useState<DashboardStats>({});
+  const [stats, setStats] = useState<DashboardStats>({
+    totalClients: 0,
+    pendingTasks: 0,
+    completedTasks: 0,
+    totalCommission: 0,
+    pendingCommission: 0,
+    paidCommission: 0
+  });
   const [recentTasks, setRecentTasks] = useState<Task[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);

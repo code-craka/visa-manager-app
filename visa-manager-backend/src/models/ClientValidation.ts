@@ -1,7 +1,7 @@
 // Client validation schemas and utilities
 // Requirements: 1.3, 3.4, 3.5
 
-import { VisaType, ClientStatus, CreateClientRequest, UpdateClientRequest } from './Client.js';
+import { VisaType, ClientStatus, CreateClientRequest, UpdateClientRequest } from './Client';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -29,6 +29,11 @@ export const clientValidationRules = {
     message: 'Phone number can contain digits, spaces, hyphens, parentheses, and optional + prefix (max 50 characters)'
   },
   visa_type: {
+    required: true,
+    enum: Object.values(VisaType),
+    message: 'Valid visa type is required'
+  },
+  visaType: {
     required: true,
     enum: Object.values(VisaType),
     message: 'Valid visa type is required'
@@ -85,10 +90,10 @@ export const validateCreateClientRequest = (data: CreateClientRequest): Validati
     }
   }
 
-  // Validate visa_type
-  if (!data.visa_type) {
+  // Validate visaType
+  if (!data.visaType) {
     errors.push('Visa type is required');
-  } else if (!clientValidationRules.visa_type.enum.includes(data.visa_type)) {
+  } else if (!clientValidationRules.visaType.enum.includes(data.visaType)) {
     errors.push('Invalid visa type');
   }
 
@@ -152,8 +157,8 @@ export const validateUpdateClientRequest = (data: UpdateClientRequest): Validati
     }
   }
 
-  // Validate visa_type (if provided)
-  if (data.visa_type !== undefined && !clientValidationRules.visa_type.enum.includes(data.visa_type)) {
+  // Validate visaType (if provided)
+  if (data.visaType !== undefined && !clientValidationRules.visaType.enum.includes(data.visaType)) {
     errors.push('Invalid visa type');
   }
 

@@ -26,18 +26,23 @@ describe('Client API Routes', () => {
     app.use(express.json());
 
     // Mock authentication middleware to pass through
-    mockRequireAuth.mockImplementation((req, res, next) => {
+    mockRequireAuth.mockImplementation(async (req, res, next) => {
       req.user = {
         id: 'test-user-123',
         email: 'test@agency.com',
+        displayName: 'Test User',
+        primaryEmail: 'test@agency.com',
         role: 'agency',
-        name: 'Test User'
+        dbUserId: 1
       };
       next();
     });
 
     // Mock role middleware to pass through
-    mockRequireRole.mockImplementation(() => (req, res, next) => next());
+    mockRequireRole.mockImplementation(() => async (req, _res, next) => {
+      next();
+      return undefined;
+    });
 
     app.use('/api/clients', clientRoutes);
   });
@@ -143,7 +148,9 @@ describe('Client API Routes', () => {
           status: ClientStatus.PENDING,
           agencyId: 'test-user-123',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          createdBy: 'test-user-123',
+          updatedBy: 'test-user-123'
         },
         {
           id: 2,
@@ -153,7 +160,9 @@ describe('Client API Routes', () => {
           status: ClientStatus.COMPLETED,
           agencyId: 'test-user-123',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          createdBy: 'test-user-123',
+          updatedBy: 'test-user-123'
         }
       ];
 
@@ -190,7 +199,9 @@ describe('Client API Routes', () => {
           status: ClientStatus.PENDING,
           agencyId: 'test-user-123',
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          createdBy: 'test-user-123',
+          updatedBy: 'test-user-123'
         }
       ];
 
@@ -236,7 +247,9 @@ describe('Client API Routes', () => {
         status: ClientStatus.PENDING,
         agencyId: 'test-user-123',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        createdBy: 'test-user-123',
+        updatedBy: 'test-user-123'
       };
 
       mockClientService.getClientById.mockResolvedValue(client);
@@ -303,7 +316,9 @@ describe('Client API Routes', () => {
         visaType: VisaType.BUSINESS,
         agencyId: 'test-user-123',
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        createdBy: 'test-user-123',
+        updatedBy: 'test-user-123'
       };
 
       mockClientService.updateClient.mockResolvedValue(updatedClient);
@@ -438,7 +453,7 @@ describe('Client API Routes', () => {
   describe('Authentication and Authorization', () => {
     it('should require authentication for all endpoints', async () => {
       // Mock authentication failure
-      mockRequireAuth.mockImplementationOnce((req, res, next) => {
+      mockRequireAuth.mockImplementationOnce(async (req, res, next) => {
         res.status(401).json({
           success: false,
           error: 'No token provided',
@@ -453,8 +468,8 @@ describe('Client API Routes', () => {
 
     it('should require agency role for client creation', async () => {
       // Mock role check failure
-      mockRequireRole.mockImplementationOnce(() => (req, res, next) => {
-        res.status(403).json({
+      mockRequireRole.mockImplementationOnce(() => async (req, _res, next) => {
+        return _res.status(403).json({
           success: false,
           error: 'Insufficient permissions',
           errorCode: 'INSUFFICIENT_PERMISSIONS'

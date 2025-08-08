@@ -6,7 +6,9 @@ We will provide security updates for the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 0.3.x   | :white_check_mark: |
+| 0.2.x   | :white_check_mark: |
+| 0.1.x   | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -14,7 +16,7 @@ We take the security of our application seriously. If you discover a security vu
 
 ### How to Report
 
-Please report security vulnerabilities by emailing `security@example.com` (replace with actual security contact email).
+Please report security vulnerabilities by emailing `security@visa-manager-app.com` or by creating a private security advisory on GitHub.
 
 In your report, please include:
 

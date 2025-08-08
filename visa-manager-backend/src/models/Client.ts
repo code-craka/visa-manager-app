@@ -25,10 +25,10 @@ export interface Client {
   id: number;
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | undefined;
   visaType: VisaType;
   status: ClientStatus;
-  notes?: string;
+  notes?: string | undefined;
   agencyId: string; // Clerk user ID
   createdAt: Date;
   updatedAt: Date;

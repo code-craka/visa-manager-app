@@ -7,7 +7,7 @@
   - Create TypeScript interfaces for Client, VisaType, and ClientStatus enums
   - _Requirements: 1.2, 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 2. Implement backend Client service layer
+- [x] 2. Implement backend Client service layer
   - Create ClientService class with CRUD operations (create, getAll, getById, update, delete)
   - Implement client statistics calculation method
   - Add input validation using the defined validation schema

@@ -12,6 +12,13 @@ import {
   PaginationInfo
 } from '../types/Client';
 
+import {
+  Notification,
+  DashboardStats,
+  Task,
+  Partner
+} from '../types/Common';
+
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 class ApiService {
@@ -119,7 +126,62 @@ class ApiService {
     const endpoint = `/clients/for-assignment${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return this.makeRequest<Partial<Client>[]>(endpoint);
   }
+
+  // Dashboard-related methods
+  async getDashboardStats(token: string): Promise<DashboardStats> {
+    // Mock implementation - replace with actual API call
+    return {
+      totalClients: 0,
+      pendingTasks: 0,
+      completedTasks: 0,
+      totalCommission: 0,
+      pendingCommission: 0,
+      paidCommission: 0
+    };
+  }
+
+  // Task-related methods
+  async getTasks(token: string, filters: { page: number; limit: number }): Promise<Task[]> {
+    // Mock implementation - replace with actual API call
+    return [];
+  }
+
+  // Notification-related methods
+  async getNotifications(token: string, page: number, limit: number, unreadOnly: boolean): Promise<Notification[]> {
+    // Mock implementation - replace with actual API call
+    return [];
+  }
+
+  // User-related methods
+  async getPartners(token: string): Promise<Partner[]> {
+    // Mock implementation - replace with actual API call
+    return [];
+  }
 }
 
 // Export singleton instance
 export default new ApiService();
+
+// Re-export types for convenience
+export type { 
+  Client, 
+  CreateClientRequest, 
+  UpdateClientRequest, 
+  ClientFilters, 
+  ClientStats,
+  ApiResponse,
+  ApiSuccessResponse,
+  PaginationInfo
+} from '../types/Client';
+
+// Re-export common types
+export type {
+  Notification,
+  DashboardStats,
+  Task,
+  User,
+  Partner
+} from '../types/Common';
+
+// Export the hook
+export { useApiService } from '../hooks/useApiService';

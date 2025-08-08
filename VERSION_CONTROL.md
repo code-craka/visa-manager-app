@@ -4,12 +4,20 @@ This document outlines the version control strategy for the Visa Manager App mon
 
 ## Current Release Information
 
-### Version 0.3.0 - Latest Release ✅
+### Version 0.3.1 - Latest Release ✅
+
+- **Release Date:** August 8, 2025
+- **Type:** Minor Release
+- **Git Tag:** `v0.3.1`
+- **Status:** Production Ready
+- **Changes:** Complete ClientService implementation, comprehensive testing, input validation
+
+### Version 0.3.0 - Previous Release
 
 - **Release Date:** August 6, 2025
 - **Type:** Major Release
 - **Git Tag:** `v0.3.0`
-- **Status:** Production Ready
+- **Status:** Stable
 - **Changes:** JWT template integration, major codebase cleanup, zero TypeScript errors
 
 ### Version 0.2.1 - Previous Release
@@ -94,7 +102,9 @@ Each commit message consists of a **header**, a **body**, and a **footer**.
 
 ### Current Tags
 
-- `v0.2.1` - Latest stable release (TypeScript fixes)
+- `v0.3.1` - Latest stable release (ClientService implementation)
+- `v0.3.0` - JWT template integration and codebase cleanup
+- `v0.2.1` - TypeScript fixes
 - `v0.2.0` - Real-time features and Material Design
 - `v0.1.0` - Initial release (deprecated)
 

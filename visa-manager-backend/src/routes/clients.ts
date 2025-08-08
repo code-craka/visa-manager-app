@@ -22,8 +22,10 @@ interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: 'agency' | 'partner';
-    name: string;
+    displayName: string;
+    primaryEmail: string;
+    role: 'agency' | 'admin' | 'partner';
+    dbUserId?: number;
   };
 }
 
@@ -117,8 +119,8 @@ class ClientController {
       };
 
       // Validate pagination parameters
-      if (filters.page < 1) filters.page = 1;
-      if (filters.limit < 1 || filters.limit > 100) filters.limit = 20;
+      if (filters.page && filters.page < 1) filters.page = 1;
+      if (filters.limit && (filters.limit < 1 || filters.limit > 100)) filters.limit = 20;
 
       const [clients, totalCount] = await Promise.all([
         this.clientService.getClients(userId, filters),
@@ -153,15 +155,16 @@ class ClientController {
    */
   async getById(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const clientId = parseInt(req.params.id);
+      const clientId = parseInt(req.params.id!);
       const userId = req.user!.id;
 
       if (isNaN(clientId)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid client ID',
           errorCode: 'INVALID_ID'
         } as ApiErrorResponse);
+        return;
       }
 
       const client = await this.clientService.getClientById(clientId, userId);
@@ -194,16 +197,17 @@ class ClientController {
    */
   async update(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const clientId = parseInt(req.params.id);
+      const clientId = parseInt(req.params.id!);
       const userId = req.user!.id;
       const updates: UpdateClientRequest = req.body;
 
       if (isNaN(clientId)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid client ID',
           errorCode: 'INVALID_ID'
         } as ApiErrorResponse);
+        return;
       }
 
       const client = await this.clientService.updateClient(clientId, updates, userId);
@@ -244,15 +248,16 @@ class ClientController {
    */
   async delete(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const clientId = parseInt(req.params.id);
+      const clientId = parseInt(req.params.id!);
       const userId = req.user!.id;
 
       if (isNaN(clientId)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid client ID',
           errorCode: 'INVALID_ID'
         } as ApiErrorResponse);
+        return;
       }
 
       await this.clientService.deleteClient(clientId, userId);
