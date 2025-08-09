@@ -2,7 +2,7 @@
 // Following Material Design patterns with optimized React performance
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import {
   Searchbar,
   Chip,
@@ -25,9 +25,10 @@ import {
 } from '../types/Client';
 import ApiService from '../services/ApiService';
 import { theme, statusColors, visaTypeIcons } from '../styles/theme';
+import { useAuth } from '../context/AuthContext';
 
 interface ClientListScreenProps {
-  navigation: any; // Will be properly typed when navigation is set up
+  navigation?: any; // Optional navigation prop for flexibility
 }
 
 interface ClientListState {
@@ -48,6 +49,8 @@ interface ClientListState {
 }
 
 const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
+  const { getAuthToken } = useAuth();
+  
   const [state, setState] = useState<ClientListState>({
     clients: [],
     searchQuery: '',
@@ -64,6 +67,13 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
     snackbarVisible: false,
     snackbarMessage: '',
   });
+
+  // Initialize ApiService with auth token getter
+  useEffect(() => {
+    if (ApiService && ApiService.setAuthTokenGetter) {
+      ApiService.setAuthTokenGetter(getAuthToken);
+    }
+  }, [getAuthToken]);
 
   // Debounced search with 300ms delay
   const debouncedSearch = useMemo(() => {
@@ -134,7 +144,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
           error: null
         }));
       } else {
-        throw new Error(response.error);
+        throw new Error((response as any).error);
       }
     } catch (error: any) {
       setState(prev => ({
@@ -167,22 +177,28 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
   }, []);
 
   const handleClientPress = useCallback((client: Client) => {
-    // Navigation will be implemented when navigation is set up
-    console.log('Navigate to client details:', client.id);
-    // navigation.navigate('ClientDetails', { clientId: client.id });
-  }, []);
+    if (navigation?.navigate) {
+      navigation.navigate('ClientDetails', { clientId: client.id });
+    } else {
+      console.log('Navigate to client details:', client.id);
+    }
+  }, [navigation]);
 
   const handleEditClient = useCallback((client: Client) => {
-    // Navigation will be implemented when navigation is set up
-    console.log('Navigate to edit client:', client.id);
-    // navigation.navigate('ClientForm', { clientId: client.id, mode: 'edit' });
-  }, []);
+    if (navigation?.navigate) {
+      navigation.navigate('ClientForm', { clientId: client.id, mode: 'edit' });
+    } else {
+      console.log('Navigate to edit client:', client.id);
+    }
+  }, [navigation]);
 
   const handleCreateClient = useCallback(() => {
-    // Navigation will be implemented when navigation is set up
-    console.log('Navigate to create client');
-    // navigation.navigate('ClientForm', { mode: 'create' });
-  }, []);
+    if (navigation?.navigate) {
+      navigation.navigate('ClientForm', { mode: 'create' });
+    } else {
+      console.log('Navigate to create client');
+    }
+  }, [navigation]);
 
   const handleRefresh = useCallback(() => {
     loadClients(true, false);
@@ -219,7 +235,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
           snackbarMessage: 'Client deleted successfully'
         }));
       } else {
-        throw new Error(response.error);
+        throw new Error((response as any).error);
       }
     } catch (error: any) {
       setState(prev => ({

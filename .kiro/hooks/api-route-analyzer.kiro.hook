@@ -4,7 +4,7 @@
   "description": "Automatically analyzes new or modified API endpoints for RESTful compliance, tests authentication with JWT tokens, verifies HTTP status codes and error handling, checks TypeScript interfaces, provides curl commands, validates input validation and error response formatting, and ensures database queries are optimized with proper error handling",
   "version": "1",
   "when": {
-    "type": "fileEdited",
+    "type": "userTriggered",
     "patterns": [
       "visa-manager-backend/src/routes/*.ts",
       "visa-manager-backend/src/middleware/*.ts"

@@ -15,7 +15,7 @@
   - Write unit tests for all service methods
   - _Requirements: 1.1, 1.2, 2.1, 3.1, 3.2, 4.1, 4.2_
 
-- [ ] 3. Create REST API endpoints for client management
+- [x] 3. Create REST API endpoints for client management
   - Implement ClientController with all CRUD endpoints (POST, GET, PUT, DELETE)
   - Add JWT authentication middleware to all client routes
   - Implement query parameter handling for search, filtering, and sorting
@@ -24,7 +24,7 @@
   - Write integration tests for all API endpoints
   - _Requirements: 1.1, 1.2, 2.1, 2.2, 2.3, 3.1, 4.1, 8.1_
 
-- [ ] 4. Build client list screen with search and filtering
+- [x] 4. Build client list screen with search and filtering
   - Create ClientListScreen component with Material Design styling
   - Implement debounced search functionality with 300ms delay
   - Add status filter chips with visual indicators

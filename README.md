@@ -20,14 +20,16 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 
 ## ✨ Latest Updates
 
-### 🚀 Version 0.3.1 (Current) - August 8, 2025
+### 🚀 Version 0.3.1 (Current) - August 9, 2025
 
+- **🌐 Complete REST API** - Full client management API with 7 endpoints and authentication
 - **🏗️ Client Service Layer** - Complete backend ClientService implementation with CRUD operations
 - **✅ Comprehensive Testing** - 23 passing unit tests for ClientService with full coverage
 - **🔍 Input Validation** - Advanced validation schema with custom error handling
-- **📊 Statistics Calculation** - Client statistics and dashboard integration
-- **🛡️ Error Handling** - Custom ClientError classes with proper status codes
-- **🔒 Row-Level Security** - RLS enforcement for all client operations
+- **📊 Statistics & Pagination** - Client statistics, filtering, sorting, and pagination support
+- **🛡️ Error Handling** - Custom ClientError classes with proper status codes and API responses
+- **🔒 Row-Level Security** - RLS enforcement for all client operations with role-based access
+- **📚 API Documentation** - Complete API documentation with examples and error codes
 
 ### 🔐 Version 0.3.0 - JWT Template Integration
 
@@ -76,17 +78,20 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 |--------|----------|-------------|--------|
 | `POST` | `/api/auth/sync-user` | Sync user with backend | ✅ Active |
 | `GET` | `/api/auth/profile` | Get user profile | ✅ Active |
-| `POST` | `/api/auth/logout` | User logout | ✅ Active |
+| `GET` | `/api/auth/users` | Get all users (agency only) | ✅ Active |
+| `GET` | `/api/test/jwt-test` | JWT template integration test | ✅ Active |
 
 ### Client Management
 
 | Method | Endpoint | Description | Status |
 |--------|----------|-------------|--------|
-| `GET` | `/api/clients` | List all clients | ✅ Active |
+| `GET` | `/api/clients` | List all clients with filtering/pagination | ✅ Active |
 | `POST` | `/api/clients` | Create new client | ✅ Active |
 | `GET` | `/api/clients/:id` | Get client details | ✅ Active |
 | `PUT` | `/api/clients/:id` | Update client | ✅ Active |
 | `DELETE` | `/api/clients/:id` | Delete client | ✅ Active |
+| `GET` | `/api/clients/stats` | Get client statistics | ✅ Active |
+| `GET` | `/api/clients/for-assignment` | Get clients for task assignment | ✅ Active |
 
 ### Task Management
 
@@ -97,6 +102,26 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 | `GET` | `/api/tasks/:id` | Get task details | ✅ Active |
 | `PUT` | `/api/tasks/:id` | Update task | ✅ Active |
 | `POST` | `/api/tasks/:id/assign` | Assign task | ✅ Active |
+| `GET` | `/api/tasks/partner/:partnerId/commission-report` | Get commission report | ✅ Active |
+
+### Dashboard & Analytics
+
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| `GET` | `/api/dashboard/agency` | Agency dashboard data | ✅ Active |
+| `GET` | `/api/dashboard/partner` | Partner dashboard data | ✅ Active |
+| `GET` | `/api/dashboard/analytics` | Analytics data (agency only) | ✅ Active |
+
+### Notifications
+
+| Method | Endpoint | Description | Status |
+|--------|----------|-------------|--------|
+| `GET` | `/api/notifications` | Get all notifications | ✅ Active |
+| `GET` | `/api/notifications/unread/count` | Get unread count | ✅ Active |
+| `POST` | `/api/notifications` | Create notification | ✅ Active |
+| `PUT` | `/api/notifications/:id/read` | Mark as read | ✅ Active |
+| `PUT` | `/api/notifications/read-all` | Mark all as read | ✅ Active |
+| `DELETE` | `/api/notifications/:id` | Delete notification | ✅ Active |
 
 ### Real-time Events
 
@@ -137,7 +162,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 - **Runtime:** Node.js 18.x (TypeScript)
   - High-performance Express.js API server
   - WebSocket server for real-time communication
-  - JWT authentication with Stack Auth integration
+  - JWT authentication with Clerk integration and JWKS verification
   - Comprehensive error handling and logging
   - RESTful API design with proper HTTP status codes
 

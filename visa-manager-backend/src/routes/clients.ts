@@ -345,47 +345,61 @@ const clientController = new ClientController();
 router.get('/stats',
   requireAuth,
   requireRole(['agency']),
-  clientController.getStats.bind(clientController)
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.getStats(req, res);
+  }
 );
 
 // For assignment endpoint
 router.get('/for-assignment',
   requireAuth,
   requireRole(['agency']),
-  clientController.getForAssignment.bind(clientController)
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.getForAssignment(req, res);
+  }
 );
 
 // Create new client (agency only)
 router.post('/',
   requireAuth,
   requireRole(['agency']),
-  clientController.create.bind(clientController)
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.create(req, res);
+  }
 );
 
 // Get all clients (both agencies and partners can view, but with different access levels)
 router.get('/',
   requireAuth,
-  clientController.getAll.bind(clientController)
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.getAll(req, res);
+  }
 );
 
 // Get specific client by ID
 router.get('/:id',
   requireAuth,
-  clientController.getById.bind(clientController)
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.getById(req, res);
+  }
 );
 
 // Update client (agency only)
 router.put('/:id',
   requireAuth,
   requireRole(['agency']),
-  clientController.update.bind(clientController)
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.update(req, res);
+  }
 );
 
 // Delete client (agency only)
 router.delete('/:id',
   requireAuth,
   requireRole(['agency']),
-  clientController.delete.bind(clientController)
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.delete(req, res);
+  }
 );
 
 export default router;

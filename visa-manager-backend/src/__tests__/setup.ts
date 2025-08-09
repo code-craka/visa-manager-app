@@ -1,8 +1,27 @@
-// Test setup file
-// This file runs before all tests
+// Test setup file for mocking common dependencies
 
-// Set test environment variables
-process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
-process.env.CLERK_PUBLISHABLE_KEY = 'pk_test_test';
-process.env.CLERK_SECRET_KEY = 'sk_test_test';
+import { Request, Response, NextFunction } from 'express';
+
+// Mock authentication middleware
+export const mockRequireAuth = jest.fn((req: Request, res: Response, next: NextFunction) => {
+  (req as any).user = {
+    id: 'test-user-123',
+    email: 'test@agency.com',
+    displayName: 'Test User',
+    primaryEmail: 'test@agency.com',
+    role: 'agency',
+    dbUserId: 1
+  };
+  next();
+});
+
+// Mock role middleware
+export const mockRequireRole = jest.fn(() => (req: Request, res: Response, next: NextFunction) => {
+  next();
+});
+
+// Mock the middleware modules
+jest.mock('../middleware/auth', () => ({
+  requireAuth: mockRequireAuth,
+  requireRole: mockRequireRole
+}));

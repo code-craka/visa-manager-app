@@ -34,7 +34,7 @@ export class ClientService {
   async createClient(clientData: CreateClientRequest, userId: string): Promise<Client> {
     try {
       // Validate input data
-      const validation = validateClientData(clientData);
+      const validation = validateClientData(clientData, false);
       if (!validation.isValid) {
         throwValidationError(validation.errors);
       }
@@ -214,7 +214,7 @@ export class ClientService {
   async updateClient(id: number, updates: UpdateClientRequest, userId: string): Promise<Client> {
     try {
       // Validate update data
-      const validation = validateClientData(updates);
+      const validation = validateClientData(updates, true);
       if (!validation.isValid) {
         throwValidationError(validation.errors);
       }

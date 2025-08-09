@@ -5,9 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.1] - 2025-08-08
+## [0.3.1] - 2025-08-09 (Current)
 
 ### Added
+
+#### Complete Client Management REST API Implementation
+- **Client Controller & Routes** - Full REST API endpoints with proper authentication
+  - `POST /api/clients` - Create new client (agency only)
+  - `GET /api/clients` - Get all clients with filtering, searching, sorting, and pagination
+  - `GET /api/clients/:id` - Get specific client by ID with RLS enforcement
+  - `PUT /api/clients/:id` - Update client (agency only)
+  - `DELETE /api/clients/:id` - Delete client with active task validation (agency only)
+  - `GET /api/clients/stats` - Get client statistics for dashboard (agency only)
+  - `GET /api/clients/for-assignment` - Get clients for task assignment (agency only)
+
+#### Advanced API Features
+- **Authentication & Authorization** - JWT middleware with role-based access control
+  - Clerk JWT template integration with JWKS verification
+  - Role-based endpoint protection (agency vs partner access)
+  - Row-Level Security enforcement at API level
+- **Request/Response Handling** - Comprehensive API response standardization
+  - Standardized `ApiSuccessResponse` and `ApiErrorResponse` interfaces
+  - Proper HTTP status codes for all scenarios
+  - Detailed error responses with error codes and validation details
+  - Pagination support with metadata for large datasets
+- **Input Validation & Sanitization** - Multi-layer validation system
+  - Request parameter validation (ID format, pagination limits)
+  - Query parameter parsing with type safety
+  - Comprehensive error handling for all edge cases
 
 #### Backend Client Service Layer Implementation
 - **ClientService Class** - Complete CRUD operations implementation

@@ -22,10 +22,23 @@ import {
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 class ApiService {
-  private async getAuthToken(): Promise<string> {
-    // This will be integrated with the existing AuthContext
-    // For now, we'll return a placeholder that will be replaced when integrated
-    const token = 'placeholder-token'; // TODO: Get from AuthContext
+  private getAuthToken: (() => Promise<string | null>) | null = null;
+
+  // Method to set the auth token getter from AuthContext
+  setAuthTokenGetter(getter: () => Promise<string | null>) {
+    this.getAuthToken = getter;
+  }
+
+  private async getToken(): Promise<string> {
+    if (!this.getAuthToken) {
+      throw new Error('Auth token getter not initialized. Make sure to call setAuthTokenGetter.');
+    }
+    
+    const token = await this.getAuthToken();
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+    
     return token;
   }
 
@@ -34,7 +47,7 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      const token = await this.getAuthToken();
+      const token = await this.getToken();
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,

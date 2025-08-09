@@ -51,7 +51,7 @@ export interface ValidationResult {
 }
 
 // Validation function for client data
-export function validateClientData(data: any): {
+export function validateClientData(data: any, isUpdate: boolean = false): {
   isValid: boolean;
   errors: ValidationError[];
   validatedData?: any;
@@ -61,13 +61,23 @@ export function validateClientData(data: any): {
   // Import validation schema
   const { clientValidationSchema } = require('../models/Client');
 
-  // Validate each field according to schema
-  Object.keys(clientValidationSchema).forEach(field => {
+  // For updates, only validate fields that are present
+  const fieldsToValidate = isUpdate ? Object.keys(data) : Object.keys(clientValidationSchema);
+
+  fieldsToValidate.forEach(field => {
     const rule = clientValidationSchema[field];
+    if (!rule) return; // Skip fields not in schema
+
     const value = data[field];
 
-    if (rule.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
+    // For updates, only check required if the field is being set
+    if (!isUpdate && rule.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
       errors.push({ field, message: `${field} is required` });
+      return;
+    }
+
+    // Skip validation if value is undefined/null for updates
+    if (isUpdate && (value === undefined || value === null)) {
       return;
     }
 
@@ -92,15 +102,20 @@ export function validateClientData(data: any): {
     return { isValid: false, errors };
   }
 
-  // Return sanitized data
-  const validatedData = {
-    name: data.name?.trim(),
-    email: data.email?.trim().toLowerCase(),
-    phone: data.phone?.trim() || undefined,
-    visaType: data.visaType,
-    status: data.status || 'pending',
-    notes: data.notes?.trim() || undefined
-  };
+  // Return sanitized data (only include fields that were provided)
+  const validatedData: any = {};
+  
+  if (data.name !== undefined) validatedData.name = data.name?.trim();
+  if (data.email !== undefined) validatedData.email = data.email?.trim().toLowerCase();
+  if (data.phone !== undefined) validatedData.phone = data.phone?.trim() || undefined;
+  if (data.visaType !== undefined) validatedData.visaType = data.visaType;
+  if (data.status !== undefined) validatedData.status = data.status;
+  if (data.notes !== undefined) validatedData.notes = data.notes?.trim() || undefined;
+
+  // For creation, set default status if not provided
+  if (!isUpdate && !validatedData.status) {
+    validatedData.status = 'pending';
+  }
 
   return { isValid: true, errors: [], validatedData };
 }
