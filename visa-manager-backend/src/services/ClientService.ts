@@ -23,6 +23,7 @@ import {
   throwValidationError,
   handleDatabaseError
 } from './ClientError';
+import { webSocketService } from './WebSocketService';
 
 export class ClientService {
   /**
@@ -59,7 +60,21 @@ export class ClientService {
         ]
       );
 
-      return mapRowToClient(result.rows[0]);
+      const newClient = mapRowToClient(result.rows[0]);
+
+      // Emit WebSocket notification for client creation
+      try {
+        webSocketService.notifyClientCreated(newClient);
+        
+        // Also update client statistics
+        const stats = await this.getClientStats(userId);
+        webSocketService.notifyClientStats(stats, userId);
+      } catch (wsError) {
+        console.error('WebSocket notification error (create):', wsError);
+        // Don't fail the operation if WebSocket fails
+      }
+
+      return newClient;
     } catch (error: any) {
       if (error instanceof ClientError) {
         throw error;
@@ -264,7 +279,23 @@ export class ClientService {
         );
       }
 
-      return mapRowToClient(result.rows[0]);
+      const updatedClient = mapRowToClient(result.rows[0]);
+
+      // Emit WebSocket notification for client update
+      try {
+        webSocketService.notifyClientUpdated(updatedClient, validatedData);
+        
+        // Also update client statistics if status changed
+        if (validatedData.status) {
+          const stats = await this.getClientStats(userId);
+          webSocketService.notifyClientStats(stats, userId);
+        }
+      } catch (wsError) {
+        console.error('WebSocket notification error (update):', wsError);
+        // Don't fail the operation if WebSocket fails
+      }
+
+      return updatedClient;
     } catch (error: any) {
       if (error instanceof ClientError) {
         throw error;
@@ -281,7 +312,23 @@ export class ClientService {
    */
   async deleteClient(id: number, userId: string): Promise<void> {
     try {
-      // First check if client has active tasks
+      // First get the client data for WebSocket notification
+      const clientResult = await pool.query(
+        'SELECT * FROM clients WHERE id = $1 AND agency_id = $2',
+        [id, userId]
+      );
+
+      if (clientResult.rows.length === 0) {
+        throw new ClientError(
+          'Client not found or access denied',
+          CLIENT_ERRORS.NOT_FOUND.status,
+          CLIENT_ERRORS.NOT_FOUND.code
+        );
+      }
+
+      const clientToDelete = mapRowToClient(clientResult.rows[0]);
+
+      // Check if client has active tasks
       const taskCheck = await pool.query(
         `SELECT COUNT(*) as task_count FROM tasks
          WHERE client_id = $1 AND status NOT IN ('completed', 'cancelled')`,
@@ -309,6 +356,18 @@ export class ClientService {
           CLIENT_ERRORS.NOT_FOUND.status,
           CLIENT_ERRORS.NOT_FOUND.code
         );
+      }
+
+      // Emit WebSocket notification for client deletion
+      try {
+        webSocketService.notifyClientDeleted(id, clientToDelete.name, userId);
+        
+        // Also update client statistics
+        const stats = await this.getClientStats(userId);
+        webSocketService.notifyClientStats(stats, userId);
+      } catch (wsError) {
+        console.error('WebSocket notification error (delete):', wsError);
+        // Don't fail the operation if WebSocket fails
       }
     } catch (error: any) {
       if (error instanceof ClientError) {

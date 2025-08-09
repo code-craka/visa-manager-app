@@ -27,6 +27,26 @@ export interface StatsUpdate {
   total_earned?: number;
 }
 
+// Client-specific WebSocket interfaces
+export interface ClientUpdate {
+  client: any; // Client interface
+  action: 'created' | 'updated' | 'deleted';
+  previousData?: any;
+}
+
+export interface ClientStatsUpdate {
+  stats: {
+    totalClients: number;
+    pending: number;
+    inProgress: number;
+    underReview: number;
+    completed: number;
+    approved: number;
+    rejected: number;
+    documentsRequired: number;
+  };
+}
+
 type WebSocketEventCallback = (message: WebSocketMessage) => void;
 
 class WebSocketService {
@@ -196,6 +216,39 @@ class WebSocketService {
   onStatsUpdate(callback: (statsUpdate: StatsUpdate) => void): void {
     this.on('stats_update', (message) => {
       callback(message.data as StatsUpdate);
+    });
+  }
+
+  // Client-specific event handlers
+  onClientCreated(callback: (client: any) => void): void {
+    this.on('client:created', (message) => {
+      if (message.data?.client) {
+        callback(message.data.client);
+      }
+    });
+  }
+
+  onClientUpdated(callback: (client: any, previousData?: any) => void): void {
+    this.on('client:updated', (message) => {
+      if (message.data?.client) {
+        callback(message.data.client, message.data.previousData);
+      }
+    });
+  }
+
+  onClientDeleted(callback: (clientId: number, clientName: string) => void): void {
+    this.on('client:deleted', (message) => {
+      if (message.data?.clientId) {
+        callback(message.data.clientId, message.data.clientName);
+      }
+    });
+  }
+
+  onClientStats(callback: (stats: ClientStatsUpdate['stats']) => void): void {
+    this.on('client:stats', (message) => {
+      if (message.data?.stats) {
+        callback(message.data.stats);
+      }
     });
   }
 

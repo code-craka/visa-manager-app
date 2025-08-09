@@ -15,17 +15,20 @@ import {
   Dialog,
   IconButton,
   Divider,
-  Snackbar
+  Snackbar,
+  Badge
 } from 'react-native-paper';
 import {
   Client,
   ClientStatus,
   VisaType,
-  ClientFilters
+  ClientFilters,
+  ClientStats
 } from '../types/Client';
 import ApiService from '../services/ApiService';
 import { theme, statusColors, visaTypeIcons } from '../styles/theme';
 import { useAuth } from '../context/AuthContext';
+import { useClientRealtime } from '../hooks/useClientRealtime';
 
 interface ClientListScreenProps {
   navigation?: any; // Optional navigation prop for flexibility
@@ -46,6 +49,11 @@ interface ClientListState {
   clientToDelete: Client | null;
   snackbarVisible: boolean;
   snackbarMessage: string;
+  // Real-time state
+  connectionStatus: string;
+  isConnected: boolean;
+  clientStats: ClientStats | null;
+  realtimeUpdates: number; // Counter for real-time updates
 }
 
 const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
@@ -66,6 +74,11 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
     clientToDelete: null,
     snackbarVisible: false,
     snackbarMessage: '',
+    // Real-time state
+    connectionStatus: 'DISCONNECTED',
+    isConnected: false,
+    clientStats: null,
+    realtimeUpdates: 0,
   });
 
   // Initialize ApiService with auth token getter
@@ -74,6 +87,75 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
       ApiService.setAuthTokenGetter(getAuthToken);
     }
   }, [getAuthToken]);
+
+  // Real-time WebSocket integration
+  const { connect, disconnect, isConnected } = useClientRealtime({
+    onClientCreated: useCallback((client: Client) => {
+      setState(prev => ({
+        ...prev,
+        clients: [client, ...prev.clients],
+        realtimeUpdates: prev.realtimeUpdates + 1,
+        snackbarVisible: true,
+        snackbarMessage: `New client "${client.name}" added`
+      }));
+    }, []),
+
+    onClientUpdated: useCallback((client: Client) => {
+      setState(prev => ({
+        ...prev,
+        clients: prev.clients.map(c => c.id === client.id ? client : c),
+        realtimeUpdates: prev.realtimeUpdates + 1,
+        snackbarVisible: true,
+        snackbarMessage: `Client "${client.name}" updated`
+      }));
+    }, []),
+
+    onClientDeleted: useCallback((clientId: number, clientName: string) => {
+      setState(prev => ({
+        ...prev,
+        clients: prev.clients.filter(c => c.id !== clientId),
+        realtimeUpdates: prev.realtimeUpdates + 1,
+        snackbarVisible: true,
+        snackbarMessage: `Client "${clientName}" deleted`
+      }));
+    }, []),
+
+    onClientStats: useCallback((stats: ClientStats) => {
+      setState(prev => ({
+        ...prev,
+        clientStats: stats
+      }));
+    }, []),
+
+    onConnectionStatusChange: useCallback((status: string) => {
+      setState(prev => ({
+        ...prev,
+        connectionStatus: status,
+        isConnected: status === 'CONNECTED'
+      }));
+    }, [])
+  });
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    const initializeWebSocket = async () => {
+      try {
+        const token = await getAuthToken();
+        if (token) {
+          await connect(token);
+        }
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+      }
+    };
+
+    initializeWebSocket();
+
+    // Cleanup on unmount
+    return () => {
+      disconnect();
+    };
+  }, [connect, disconnect, getAuthToken]);
 
   // Debounced search with 300ms delay
   const debouncedSearch = useMemo(() => {
@@ -375,6 +457,29 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
         elevation={2}
       />
 
+      {/* Connection status indicator */}
+      <View style={styles.connectionStatus}>
+        <View style={styles.connectionIndicator}>
+          <View style={[
+            styles.connectionDot,
+            { backgroundColor: state.isConnected ? '#4CAF50' : '#F44336' }
+          ]} />
+          <Text variant="bodySmall" style={styles.connectionText}>
+            {state.isConnected ? 'Live updates active' : 'Reconnecting...'}
+          </Text>
+          {state.realtimeUpdates > 0 && (
+            <Badge size={16} style={styles.updatesBadge}>
+              {state.realtimeUpdates}
+            </Badge>
+          )}
+        </View>
+        {state.clientStats && (
+          <Text variant="bodySmall" style={styles.statsText}>
+            {state.clientStats.totalClients} clients • {state.clientStats.pending} pending
+          </Text>
+        )}
+      </View>
+
       {/* Status filter chips */}
       <View style={styles.filterContainer}>
         <Text variant="labelMedium" style={styles.filterLabel}>Filter by status:</Text>
@@ -628,6 +733,38 @@ const styles = StyleSheet.create({
   searchBar: {
     margin: theme.spacing.medium,
     elevation: theme.elevation.level2,
+  },
+  connectionStatus: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.medium,
+    paddingVertical: theme.spacing.small,
+    backgroundColor: theme.colors.surfaceVariant,
+    marginHorizontal: theme.spacing.medium,
+    marginBottom: theme.spacing.small,
+    borderRadius: theme.borderRadius.small,
+  },
+  connectionIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  connectionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: theme.spacing.small,
+  },
+  connectionText: {
+    color: theme.colors.onSurfaceVariant,
+    marginRight: theme.spacing.small,
+  },
+  updatesBadge: {
+    backgroundColor: theme.colors.primary,
+  },
+  statsText: {
+    color: theme.colors.onSurfaceVariant,
+    fontWeight: '500',
   },
   filterContainer: {
     paddingHorizontal: theme.spacing.medium,

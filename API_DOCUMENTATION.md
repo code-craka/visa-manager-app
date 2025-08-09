@@ -620,9 +620,176 @@ const clients = await ApiService.getClients({
 });
 ```
 
+## WebSocket Real-time Communication
+
+### Connection Endpoint
+
+```
+ws://localhost:3000/ws?token=<jwt_token>
+wss://your-domain.com/ws?token=<jwt_token>
+```
+
+### Authentication
+
+WebSocket connections require JWT authentication via query parameter:
+
+```javascript
+const token = await getToken({ template: 'neon' });
+const ws = new WebSocket(`ws://localhost:3000/ws?token=${token}`);
+```
+
+### Client Management Events
+
+#### Client Created
+```json
+{
+  "type": "client:created",
+  "data": {
+    "client": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "status": "pending",
+      "visaType": "tourist",
+      "agencyId": "user_123",
+      "createdAt": "2025-08-09T10:00:00Z"
+    }
+  },
+  "timestamp": "2025-08-09T10:00:00Z",
+  "agencyId": "user_123"
+}
+```
+
+#### Client Updated
+```json
+{
+  "type": "client:updated",
+  "data": {
+    "client": {
+      "id": 1,
+      "name": "John Smith",
+      "status": "in_progress",
+      // ... other client fields
+    },
+    "previousData": {
+      "name": "John Doe",
+      "status": "pending"
+    }
+  },
+  "timestamp": "2025-08-09T10:05:00Z",
+  "agencyId": "user_123"
+}
+```
+
+#### Client Deleted
+```json
+{
+  "type": "client:deleted",
+  "data": {
+    "clientId": 1,
+    "clientName": "John Doe"
+  },
+  "timestamp": "2025-08-09T10:10:00Z",
+  "agencyId": "user_123"
+}
+```
+
+#### Client Statistics Update
+```json
+{
+  "type": "client:stats",
+  "data": {
+    "stats": {
+      "totalClients": 25,
+      "pending": 5,
+      "inProgress": 8,
+      "completed": 12,
+      "approved": 10,
+      "rejected": 2
+    }
+  },
+  "timestamp": "2025-08-09T10:15:00Z",
+  "agencyId": "user_123"
+}
+```
+
+### Connection Management
+
+#### Ping/Pong
+```json
+// Client sends
+{ "type": "ping" }
+
+// Server responds
+{
+  "type": "pong",
+  "timestamp": "2025-08-09T10:00:00Z"
+}
+```
+
+### Frontend Integration
+
+#### Using useClientRealtime Hook
+```typescript
+import { useClientRealtime } from '../hooks/useClientRealtime';
+
+const { connect, disconnect, isConnected } = useClientRealtime({
+  onClientCreated: (client) => {
+    console.log('New client created:', client.name);
+    // Update local state
+  },
+  onClientUpdated: (client, previousData) => {
+    console.log('Client updated:', client.name);
+    // Update local state
+  },
+  onClientDeleted: (clientId, clientName) => {
+    console.log('Client deleted:', clientName);
+    // Remove from local state
+  },
+  onClientStats: (stats) => {
+    console.log('Stats updated:', stats);
+    // Update dashboard
+  },
+  onConnectionStatusChange: (status) => {
+    console.log('Connection status:', status);
+    // Update UI indicators
+  }
+});
+
+// Connect with auth token
+useEffect(() => {
+  const initWebSocket = async () => {
+    const token = await getAuthToken();
+    if (token) {
+      await connect(token);
+    }
+  };
+  initWebSocket();
+  
+  return () => disconnect();
+}, []);
+```
+
+### Connection States
+
+- `CONNECTING` - Establishing connection
+- `CONNECTED` - Active connection with server
+- `DISCONNECTED` - No connection
+- `RECONNECTING` - Attempting to reconnect
+
+### Error Handling
+
+WebSocket connections include automatic reconnection with exponential backoff:
+
+- **Max Reconnect Attempts**: 5
+- **Base Interval**: 5 seconds
+- **Exponential Backoff**: 2x multiplier
+- **Ping Interval**: 30 seconds
+- **Timeout**: 60 seconds
+
 ## Changelog
 
-- **v0.3.1** - Complete client management API implementation
+- **v0.3.1** - Complete client management API implementation with real-time WebSocket integration
 - **v0.3.0** - JWT template integration and authentication overhaul
 - **v0.2.0** - Initial API structure and basic endpoints
 

@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 import { initializeDatabase } from './db.js';
+import { webSocketService } from './services/WebSocketService.js';
 import authRoutes from './routes/auth.js';
 import clientRoutes from './routes/clients.js';
 import taskRoutes from './routes/tasks.js';
@@ -13,6 +15,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const server = createServer(app);
 
 // Middleware
 app.use(cors());
@@ -34,8 +37,31 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.listen(port, () => {
+// Initialize WebSocket service
+webSocketService.initialize(server);
+
+server.listen(port, () => {
   console.log(`Visa Manager Backend listening at http://localhost:${port}`);
-  console.log('🔗 Neon Auth integration enabled');
+  console.log('🔗 Clerk JWT integration enabled');
   console.log('🗄️ PostgreSQL database via Neon connected');
+  console.log('🔌 WebSocket server ready for real-time updates');
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  webSocketService.shutdown();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  webSocketService.shutdown();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });

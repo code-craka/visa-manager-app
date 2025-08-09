@@ -51,7 +51,7 @@
   - Implement loading states and proper error recovery
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 7. Build client selection modal for task assignment
+- [x] 7. Build client selection modal for task assignment
   - Create ClientSelectionModal component with search capabilities
   - Implement client filtering and visual status indicators
   - Add visa type icons and client information display
@@ -59,7 +59,7 @@
   - Handle empty states and no results scenarios
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 8. Implement real-time updates via WebSocket
+- [x] 8. Implement real-time updates via WebSocket
   - Integrate client management with existing WebSocket service
   - Add event handlers for client create, update, delete events
   - Implement real-time list updates and statistics refresh

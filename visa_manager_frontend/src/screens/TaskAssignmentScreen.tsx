@@ -20,6 +20,7 @@ import {
 import { useApiService, Client, Task, User } from '../services/ApiService';
 import { useRealtime } from '../context/RealtimeContext';
 import { theme } from '../styles/theme';
+import ClientSelectionModal from '../components/ClientSelectionModal';
 
 interface Partner extends User {
   specialization?: string;
@@ -206,7 +207,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
   const [clients, setClients] = useState<Client[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  
+
   // Form state
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
@@ -216,7 +217,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
   const [commissionAmount, setCommissionAmount] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
   const [deadline, setDeadline] = useState('');
-  
+
   // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [clientModalVisible, setClientModalVisible] = useState(false);
@@ -229,9 +230,11 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
   const loadClients = useCallback(async () => {
     try {
       const clientsData = await callApi((token) =>
-        apiService.getClients(token, 1, 50)
+        apiService.getClients({ page: 1, limit: 50 })
       );
-      setClients(clientsData.clients || []);
+      if (clientsData.success) {
+        setClients(clientsData.data || []);
+      }
     } catch (error) {
       console.error('Failed to load clients:', error);
     }
@@ -296,7 +299,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
   // Load initial data
   useEffect(() => {
     loadInitialData();
-    
+
     // Handle route params
     if (route?.params) {
       if (route.params.clientId) {
@@ -350,7 +353,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
           due_date: deadline || undefined,
         };
 
-        await callApi((token) => 
+        await callApi((token) =>
           apiService.createTask(taskData, token)
         );
 
@@ -363,18 +366,18 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
           notes: `Assigned to ${selectedPartner.name} for client ${selectedClient.name}`,
         };
 
-        await callApi((token) => 
+        await callApi((token) =>
           apiService.assignTask(token, assignmentData)
         );
 
         setSnackbarMessage('Task assigned successfully!');
       }
-      
+
       setSnackbarVisible(true);
-      
+
       // Reset form
       resetForm();
-      
+
       // Navigate back after short delay
       setTimeout(() => {
         navigation.goBack();
@@ -506,7 +509,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
                 style={styles.input}
                 placeholder="e.g., Visa Application, Document Review"
               />
-              
+
               <TextInput
                 label="Description"
                 value={taskDescription}
@@ -531,7 +534,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
                       ]}
                       textStyle={[
                         styles.priorityChipText,
-                        priority === level 
+                        priority === level
                           ? styles.priorityChipTextSelected
                           : { color: getPriorityColors(level) }
                       ]}
@@ -581,8 +584,8 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
                 <Text style={styles.selectedTaskType}>{selectedTask.task_type}</Text>
                 <Text style={styles.selectedTaskDescription}>{selectedTask.description || 'No description'}</Text>
                 <View style={styles.taskMetaContainer}>
-                  <Chip 
-                    mode="outlined" 
+                  <Chip
+                    mode="outlined"
                     style={{
                       borderColor: getStatusColor(selectedTask.status)
                     }}
@@ -624,45 +627,16 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
       </Card>
 
       {/* Client Selection Modal */}
-      <Portal>
-        <Modal
-          visible={clientModalVisible}
-          onDismiss={() => setClientModalVisible(false)}
-          contentContainerStyle={styles.modalContainer}
-        >
-          <Surface style={styles.modalSurface}>
-            <Title style={styles.modalTitle}>Select Client</Title>
-            <ScrollView style={styles.modalList}>
-              {clients.map((client) => (
-                <List.Item
-                  key={client.id}
-                  title={client.name}
-                  description={`${client.visa_type} • ${client.passport}`}
-                  left={(props) => (
-                    <Avatar.Icon 
-                      {...props} 
-                      icon={getVisaTypeIcon(client.visa_type)}
-                      size={40}
-                    />
-                  )}
-                  onPress={() => {
-                    setSelectedClient(client);
-                    setClientModalVisible(false);
-                  }}
-                  style={styles.listItem}
-                />
-              ))}
-            </ScrollView>
-            <Button 
-              mode="outlined" 
-              onPress={() => setClientModalVisible(false)}
-              style={styles.closeButton}
-            >
-              Close
-            </Button>
-          </Surface>
-        </Modal>
-      </Portal>
+      <ClientSelectionModal
+        visible={clientModalVisible}
+        onClose={() => setClientModalVisible(false)}
+        onSelect={(client) => {
+          setSelectedClient(client);
+          setClientModalVisible(false);
+        }}
+        title="Select Client for Task Assignment"
+        subtitle="Choose a client to assign this task to"
+      />
 
       {/* Partner Selection Modal */}
       <Portal>
@@ -680,8 +654,8 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
                   title={partner.name}
                   description={partner.email}
                   left={(props) => (
-                    <Avatar.Text 
-                      {...props} 
+                    <Avatar.Text
+                      {...props}
                       label={partner.name.charAt(0)}
                       size={40}
                     />
@@ -694,8 +668,8 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
                 />
               ))}
             </ScrollView>
-            <Button 
-              mode="outlined" 
+            <Button
+              mode="outlined"
               onPress={() => setPartnerModalVisible(false)}
               style={styles.closeButton}
             >
@@ -746,8 +720,8 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
                 />
               ))}
             </ScrollView>
-            <Button 
-              mode="outlined" 
+            <Button
+              mode="outlined"
               onPress={() => setTaskModalVisible(false)}
               style={styles.closeButton}
             >
