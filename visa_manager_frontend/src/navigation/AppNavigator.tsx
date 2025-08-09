@@ -11,6 +11,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ClientListScreen from '../screens/ClientListScreen';
+import ClientFormScreen from '../screens/ClientFormScreen';
 import TaskAssignmentScreen from '../screens/TaskAssignmentScreen';
 import CommissionReportScreen from '../screens/CommissionReportScreen';
 import NotificationScreen from '../screens/NotificationScreen';
@@ -37,6 +38,28 @@ const AuthStack = () => (
       name="Register"
       component={RegistrationScreen}
       options={{ title: 'Create Account' }}
+    />
+  </Stack.Navigator>
+);
+
+// Client Stack for client-related screens
+const ClientStack = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: theme.colors.primary },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' }
+    }}
+  >
+    <Stack.Screen
+      name="ClientList"
+      component={ClientListScreen}
+      options={{ title: 'Clients', headerShown: false }}
+    />
+    <Stack.Screen
+      name="ClientForm"
+      component={ClientFormScreen}
+      options={{ title: 'Client Form', headerShown: false }}
     />
   </Stack.Navigator>
 );
@@ -68,12 +91,13 @@ const MainTabs = () => {
 
       <Tab.Screen
         name="Clients"
-        component={ClientListScreen}
+        component={ClientStack}
         options={{
           tabBarIcon: ({ color }) => (
             <View style={{ width: 24, height: 24, backgroundColor: color }} />
           ),
-          title: 'Clients'
+          title: 'Clients',
+          headerShown: false
         }}
       />
 

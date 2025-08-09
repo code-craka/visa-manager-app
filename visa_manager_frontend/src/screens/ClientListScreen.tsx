@@ -210,7 +210,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
     }
   }, [state.hasMore, state.loading, loadClients]);
 
-  // Delete client functionality
+  // Delete client functionality with enhanced error handling
   const handleDeleteClient = useCallback((client: Client) => {
     setState(prev => ({
       ...prev,
@@ -223,30 +223,51 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
     if (!state.clientToDelete) return;
 
     try {
+      setState(prev => ({ ...prev, loading: true }));
+      
       const response = await ApiService.deleteClient(state.clientToDelete.id);
 
       if (response.success) {
+        // Remove client from local state
         setState(prev => ({
           ...prev,
           clients: prev.clients.filter(c => c.id !== state.clientToDelete!.id),
           showDeleteDialog: false,
           clientToDelete: null,
+          loading: false,
           snackbarVisible: true,
-          snackbarMessage: 'Client deleted successfully'
+          snackbarMessage: `Client "${state.clientToDelete!.name}" deleted successfully`
         }));
+
+        // Refresh the list to ensure consistency
+        setTimeout(() => {
+          loadClients(true, false);
+        }, 1000);
       } else {
         throw new Error((response as any).error);
       }
     } catch (error: any) {
+      let errorMessage = 'Failed to delete client';
+      
+      // Handle specific error cases
+      if (error.message?.includes('active tasks') || error.message?.includes('HAS_ACTIVE_TASKS')) {
+        errorMessage = `Cannot delete "${state.clientToDelete?.name}" because they have active tasks. Please complete or cancel all tasks first.`;
+      } else if (error.message?.includes('not found') || error.message?.includes('access denied')) {
+        errorMessage = `Client "${state.clientToDelete?.name}" not found or access denied.`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       setState(prev => ({
         ...prev,
         showDeleteDialog: false,
         clientToDelete: null,
+        loading: false,
         snackbarVisible: true,
-        snackbarMessage: error.message || 'Failed to delete client'
+        snackbarMessage: errorMessage
       }));
     }
-  }, [state.clientToDelete]);
+  }, [state.clientToDelete, loadClients]);
 
   // Helper function to get status color
   const getStatusColor = useCallback((status: ClientStatus): string => {
@@ -319,6 +340,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
               onPress={() => handleDeleteClient(item)}
               style={styles.actionButton}
               iconColor={theme.colors.error}
+              testID={`delete-client-${item.id}`}
             />
           </View>
         </View>
@@ -473,24 +495,104 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
         color={theme.colors.onPrimary}
       />
 
-      {/* Delete confirmation dialog */}
+      {/* Enhanced delete confirmation dialog with client details */}
       <Portal>
         <Dialog
           visible={state.showDeleteDialog}
           onDismiss={() => setState(prev => ({ ...prev, showDeleteDialog: false, clientToDelete: null }))}
+          style={styles.deleteDialog}
         >
-          <Dialog.Title>Delete Client</Dialog.Title>
+          <Dialog.Title style={styles.deleteDialogTitle}>
+            <Text variant="headlineSmall" style={{ color: theme.colors.error }}>
+              Delete Client
+            </Text>
+          </Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium">
-              Are you sure you want to delete {state.clientToDelete?.name}? This action cannot be undone.
+            <Text variant="bodyMedium" style={styles.deleteWarningText}>
+              Are you sure you want to permanently delete this client? This action cannot be undone.
+            </Text>
+            
+            {state.clientToDelete && (
+              <Card style={styles.clientDetailsCard}>
+                <Card.Content>
+                  <View style={styles.clientDetailRow}>
+                    <Text variant="labelMedium" style={styles.clientDetailLabel}>Name:</Text>
+                    <Text variant="bodyMedium" style={styles.clientDetailValue}>
+                      {state.clientToDelete.name}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.clientDetailRow}>
+                    <Text variant="labelMedium" style={styles.clientDetailLabel}>Email:</Text>
+                    <Text variant="bodyMedium" style={styles.clientDetailValue}>
+                      {state.clientToDelete.email}
+                    </Text>
+                  </View>
+                  
+                  {state.clientToDelete.phone && (
+                    <View style={styles.clientDetailRow}>
+                      <Text variant="labelMedium" style={styles.clientDetailLabel}>Phone:</Text>
+                      <Text variant="bodyMedium" style={styles.clientDetailValue}>
+                        {state.clientToDelete.phone}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  <View style={styles.clientDetailRow}>
+                    <Text variant="labelMedium" style={styles.clientDetailLabel}>Visa Type:</Text>
+                    <Chip
+                      icon={getVisaTypeIcon(state.clientToDelete.visaType)}
+                      style={styles.visaTypeChip}
+                      textStyle={styles.chipText}
+                      compact
+                    >
+                      {state.clientToDelete.visaType.toUpperCase()}
+                    </Chip>
+                  </View>
+                  
+                  <View style={styles.clientDetailRow}>
+                    <Text variant="labelMedium" style={styles.clientDetailLabel}>Status:</Text>
+                    <Chip
+                      mode="outlined"
+                      style={[styles.statusDetailChip, { backgroundColor: getStatusColor(state.clientToDelete.status) }]}
+                      textStyle={styles.chipText}
+                      compact
+                    >
+                      {state.clientToDelete.status.replace('_', ' ').toUpperCase()}
+                    </Chip>
+                  </View>
+                  
+                  <View style={styles.clientDetailRow}>
+                    <Text variant="labelMedium" style={styles.clientDetailLabel}>Created:</Text>
+                    <Text variant="bodyMedium" style={styles.clientDetailValue}>
+                      {new Date(state.clientToDelete.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </Card.Content>
+              </Card>
+            )}
+            
+            <Text variant="bodySmall" style={styles.deleteNoteText}>
+              Note: Clients with active tasks cannot be deleted. Please complete or cancel all associated tasks first.
             </Text>
           </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setState(prev => ({ ...prev, showDeleteDialog: false, clientToDelete: null }))}>
+          <Dialog.Actions style={styles.deleteDialogActions}>
+            <Button 
+              onPress={() => setState(prev => ({ ...prev, showDeleteDialog: false, clientToDelete: null }))}
+              style={styles.cancelButton}
+            >
               Cancel
             </Button>
-            <Button onPress={confirmDeleteClient} textColor={theme.colors.error}>
-              Delete
+            <Button 
+              onPress={confirmDeleteClient} 
+              mode="contained"
+              buttonColor={theme.colors.error}
+              textColor="#FFFFFF"
+              style={styles.deleteButton}
+              loading={state.loading}
+              disabled={state.loading}
+            >
+              {state.loading ? 'Deleting...' : 'Delete Client'}
             </Button>
           </Dialog.Actions>
         </Dialog>
@@ -678,6 +780,63 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: theme.colors.primary,
+  },
+  // Delete dialog styles
+  deleteDialog: {
+    maxWidth: 400,
+    alignSelf: 'center',
+  },
+  deleteDialogTitle: {
+    paddingBottom: theme.spacing.small,
+  },
+  deleteWarningText: {
+    marginBottom: theme.spacing.medium,
+    color: theme.colors.onSurface,
+    textAlign: 'center',
+  },
+  clientDetailsCard: {
+    marginVertical: theme.spacing.medium,
+    backgroundColor: theme.colors.surfaceVariant,
+    elevation: 1,
+  },
+  clientDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.small,
+    paddingVertical: theme.spacing.small,
+  },
+  clientDetailLabel: {
+    flex: 1,
+    color: theme.colors.onSurfaceVariant,
+    fontWeight: '600',
+  },
+  clientDetailValue: {
+    flex: 2,
+    textAlign: 'right',
+    color: theme.colors.onSurface,
+  },
+  visaTypeChip: {
+    backgroundColor: theme.colors.primaryContainer,
+    height: 24,
+  },
+  statusDetailChip: {
+    height: 24,
+  },
+  deleteNoteText: {
+    marginTop: theme.spacing.medium,
+    color: theme.colors.onSurfaceVariant,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  deleteDialogActions: {
+    paddingTop: theme.spacing.medium,
+  },
+  cancelButton: {
+    marginRight: theme.spacing.small,
+  },
+  deleteButton: {
+    minWidth: 120,
   },
 });
 

@@ -285,4 +285,139 @@ describe('ClientService', () => {
       expect(result.validatedData).toBeDefined();
     });
   });
+
+  describe('Client Deletion Functionality', () => {
+    it('should successfully delete client when no active tasks exist', async () => {
+      // Mock database responses
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '0' }] }); // No active tasks
+      mockQuery.mockResolvedValueOnce({ rowCount: 1 }); // Successful deletion
+
+      await expect(clientService.deleteClient(1, 'test-agency-id')).resolves.not.toThrow();
+      
+      // Verify the correct queries were called
+      expect(mockQuery).toHaveBeenCalledTimes(2);
+      expect(mockQuery).toHaveBeenNthCalledWith(1, 
+        expect.stringContaining('SELECT COUNT(*) as task_count FROM tasks'),
+        [1]
+      );
+      expect(mockQuery).toHaveBeenNthCalledWith(2,
+        'DELETE FROM clients WHERE id = $1 AND agency_id = $2',
+        [1, 'test-agency-id']
+      );
+    });
+
+    it('should throw error when client has active tasks', async () => {
+      // Mock database response with active tasks
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '2' }] }); // Has active tasks
+
+      try {
+        await clientService.deleteClient(1, 'test-agency-id');
+        fail('Should have thrown HAS_ACTIVE_TASKS error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientError);
+        expect((error as any).errorCode).toBe('HAS_ACTIVE_TASKS');
+        expect((error as any).statusCode).toBe(409);
+        expect((error as any).message).toContain('Cannot delete client with active tasks');
+      }
+
+      // Verify only the task check query was called
+      expect(mockQuery).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw error when client not found', async () => {
+      // Mock database responses
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '0' }] }); // No active tasks
+      mockQuery.mockResolvedValueOnce({ rowCount: 0 }); // Client not found
+
+      try {
+        await clientService.deleteClient(999, 'test-agency-id');
+        fail('Should have thrown NOT_FOUND error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientError);
+        expect((error as any).errorCode).toBe('CLIENT_NOT_FOUND');
+        expect((error as any).statusCode).toBe(404);
+        expect((error as any).message).toContain('Client not found or access denied');
+      }
+    });
+
+    it('should handle database errors during task check', async () => {
+      // Mock database error during task check
+      mockQuery.mockRejectedValueOnce(new Error('Database connection failed'));
+
+      try {
+        await clientService.deleteClient(1, 'test-agency-id');
+        fail('Should have thrown database error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientError);
+        expect((error as any).errorCode).toBe('DELETION_FAILED');
+        expect((error as any).statusCode).toBe(500);
+      }
+    });
+
+    it('should handle database errors during deletion', async () => {
+      // Mock successful task check but database error during deletion
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '0' }] }); // No active tasks
+      mockQuery.mockRejectedValueOnce(new Error('Database connection failed'));
+
+      try {
+        await clientService.deleteClient(1, 'test-agency-id');
+        fail('Should have thrown database error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientError);
+        expect((error as any).errorCode).toBe('DELETION_FAILED');
+        expect((error as any).statusCode).toBe(500);
+      }
+    });
+
+    it('should validate client ID parameter', async () => {
+      // Test with invalid client ID (should be handled by the calling code, but test the service behavior)
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '0' }] });
+      mockQuery.mockResolvedValueOnce({ rowCount: 0 });
+
+      try {
+        await clientService.deleteClient(0, 'test-agency-id'); // Invalid ID
+        fail('Should have thrown error for invalid ID');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientError);
+      }
+    });
+
+    it('should validate agency ID parameter', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '0' }] });
+      mockQuery.mockResolvedValueOnce({ rowCount: 0 });
+
+      try {
+        await clientService.deleteClient(1, ''); // Empty agency ID
+        fail('Should have thrown error for empty agency ID');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientError);
+      }
+    });
+
+    it('should check for tasks with correct status conditions', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '0' }] });
+      mockQuery.mockResolvedValueOnce({ rowCount: 1 });
+
+      await clientService.deleteClient(1, 'test-agency-id');
+
+      // Verify the task check query includes the correct status conditions
+      expect(mockQuery).toHaveBeenNthCalledWith(1,
+        expect.stringContaining("status NOT IN ('completed', 'cancelled')"),
+        [1]
+      );
+    });
+
+    it('should enforce Row-Level Security in deletion', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [{ task_count: '0' }] });
+      mockQuery.mockResolvedValueOnce({ rowCount: 1 });
+
+      await clientService.deleteClient(1, 'test-agency-id');
+
+      // Verify the delete query includes agency_id for RLS
+      expect(mockQuery).toHaveBeenNthCalledWith(2,
+        'DELETE FROM clients WHERE id = $1 AND agency_id = $2',
+        [1, 'test-agency-id']
+      );
+    });
+  });
 });

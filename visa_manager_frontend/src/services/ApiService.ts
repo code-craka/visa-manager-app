@@ -141,7 +141,7 @@ class ApiService {
   }
 
   // Dashboard-related methods
-  async getDashboardStats(token: string): Promise<DashboardStats> {
+  async getDashboardStats(): Promise<DashboardStats> {
     // Mock implementation - replace with actual API call
     return {
       totalClients: 0,
@@ -154,19 +154,21 @@ class ApiService {
   }
 
   // Task-related methods
-  async getTasks(token: string, filters: { page: number; limit: number }): Promise<Task[]> {
+  async getTasks(filters: { page: number; limit: number }): Promise<Task[]> {
     // Mock implementation - replace with actual API call
+    console.log('Getting tasks with filters:', filters);
     return [];
   }
 
   // Notification-related methods
-  async getNotifications(token: string, page: number, limit: number, unreadOnly: boolean): Promise<Notification[]> {
+  async getNotifications(page: number, limit: number, unreadOnly: boolean): Promise<Notification[]> {
     // Mock implementation - replace with actual API call
+    console.log('Getting notifications:', { page, limit, unreadOnly });
     return [];
   }
 
   // User-related methods
-  async getPartners(token: string): Promise<Partner[]> {
+  async getPartners(): Promise<Partner[]> {
     // Mock implementation - replace with actual API call
     return [];
   }
