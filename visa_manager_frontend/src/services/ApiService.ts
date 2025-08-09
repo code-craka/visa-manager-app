@@ -160,6 +160,39 @@ class ApiService {
     return [];
   }
 
+  // Get specific task by ID
+  async getTaskById(id: number): Promise<ApiResponse<Task>> {
+    // Mock implementation - replace with actual API call
+    console.log('Getting task by ID:', id);
+    return {
+      success: false,
+      error: 'Not implemented',
+      errorCode: 'NOT_IMPLEMENTED'
+    };
+  }
+
+  // Create new task
+  async createTask(taskData: any): Promise<ApiResponse<Task>> {
+    // Mock implementation - replace with actual API call
+    console.log('Creating task:', taskData);
+    return {
+      success: false,
+      error: 'Not implemented',
+      errorCode: 'NOT_IMPLEMENTED'
+    };
+  }
+
+  // Assign task to partner
+  async assignTask(assignmentData: any): Promise<ApiResponse<Task>> {
+    // Mock implementation - replace with actual API call
+    console.log('Assigning task:', assignmentData);
+    return {
+      success: false,
+      error: 'Not implemented',
+      errorCode: 'NOT_IMPLEMENTED'
+    };
+  }
+
   // Notification-related methods
   async getNotifications(page: number, limit: number, unreadOnly: boolean): Promise<Notification[]> {
     // Mock implementation - replace with actual API call
@@ -171,6 +204,17 @@ class ApiService {
   async getPartners(): Promise<Partner[]> {
     // Mock implementation - replace with actual API call
     return [];
+  }
+
+  // Get all users with optional role filter
+  async getUsers(filters?: { role?: string }): Promise<ApiResponse<any[]>> {
+    // Mock implementation - replace with actual API call
+    console.log('Getting users with filters:', filters);
+    return {
+      success: false,
+      error: 'Not implemented',
+      errorCode: 'NOT_IMPLEMENTED'
+    };
   }
 }
 
