@@ -1,31 +1,24 @@
 -- Migration: Optimize clients table performance with additional indexes and query optimizations
--- Version: 005_optimize_clients_performance.sql
--- Requirements: 2.1, 2.2, 2.3, 8.2
+-- Version: 005_optimize_clients_performance_fixed.sql
 
-BEGIN;
-
--- Add composite indexes for common query patterns
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_agency_status ON clients(agency_id, status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_agency_visa_type ON clients(agency_id, visa_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_agency_created_at ON clients(agency_id, created_at DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_agency_name ON clients(agency_id, name);
+-- Add composite indexes for common query patterns (without CONCURRENTLY in transaction)
+CREATE INDEX IF NOT EXISTS idx_clients_agency_status ON clients(agency_id, status);
+CREATE INDEX IF NOT EXISTS idx_clients_agency_visa_type ON clients(agency_id, visa_type);
+CREATE INDEX IF NOT EXISTS idx_clients_agency_created_at ON clients(agency_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_clients_agency_name ON clients(agency_id, name);
 
 -- Add partial indexes for common filters
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_pending ON clients(agency_id, created_at DESC) 
+CREATE INDEX IF NOT EXISTS idx_clients_pending ON clients(agency_id, created_at DESC) 
   WHERE status = 'pending';
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_in_progress ON clients(agency_id, created_at DESC) 
+CREATE INDEX IF NOT EXISTS idx_clients_in_progress ON clients(agency_id, created_at DESC) 
   WHERE status = 'in_progress';
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_completed ON clients(agency_id, created_at DESC) 
+CREATE INDEX IF NOT EXISTS idx_clients_completed ON clients(agency_id, created_at DESC) 
   WHERE status = 'completed';
 
--- Add index for search functionality (case-insensitive)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_search_text ON clients 
-  USING gin((name || ' ' || email) gin_trgm_ops);
-
 -- Add index for sorting by multiple columns
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_clients_agency_sort ON clients(agency_id, name, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_clients_agency_sort ON clients(agency_id, name, created_at DESC);
 
--- Create materialized view for client statistics (for better dashboard performance)
+-- Create materialized view for client statistics
 CREATE MATERIALIZED VIEW IF NOT EXISTS client_stats_mv AS
 SELECT 
   agency_id,
@@ -46,13 +39,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_client_stats_mv_agency ON client_stats_mv(
 
 -- Create function to refresh client stats materialized view
 CREATE OR REPLACE FUNCTION refresh_client_stats()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
-  -- Refresh the materialized view concurrently
-  REFRESH MATERIALIZED VIEW CONCURRENTLY client_stats_mv;
+  REFRESH MATERIALIZED VIEW client_stats_mv;
   RETURN NULL;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Create trigger to refresh stats when clients are modified
 DROP TRIGGER IF EXISTS trigger_refresh_client_stats ON clients;
@@ -85,7 +77,7 @@ RETURNS TABLE(
   updated_at TIMESTAMP WITH TIME ZONE,
   created_by VARCHAR(255),
   updated_by VARCHAR(255)
-) AS $
+) AS $$
 BEGIN
   RETURN QUERY
   SELECT c.id, c.name, c.email, c.phone, c.visa_type, c.status, c.notes,
@@ -104,11 +96,11 @@ BEGIN
     CASE WHEN p_sort_by = 'visa_type' AND p_sort_order = 'DESC' THEN c.visa_type END DESC,
     CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'ASC' THEN c.created_at END ASC,
     CASE WHEN p_sort_by = 'created_at' AND p_sort_order = 'DESC' THEN c.created_at END DESC,
-    c.created_at DESC -- Default fallback
+    c.created_at DESC
   LIMIT p_limit
   OFFSET p_offset;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Create function for optimized client count
 CREATE OR REPLACE FUNCTION count_clients(
@@ -117,7 +109,7 @@ CREATE OR REPLACE FUNCTION count_clients(
   p_status VARCHAR(50) DEFAULT NULL,
   p_visa_type VARCHAR(50) DEFAULT NULL
 )
-RETURNS INTEGER AS $
+RETURNS INTEGER AS $$
 BEGIN
   RETURN (
     SELECT COUNT(*)::INTEGER
@@ -130,7 +122,7 @@ BEGIN
       AND (p_visa_type IS NULL OR c.visa_type = p_visa_type)
   );
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Create function to get client statistics from materialized view
 CREATE OR REPLACE FUNCTION get_client_stats(p_agency_id VARCHAR(255))
@@ -143,7 +135,7 @@ RETURNS TABLE(
   approved BIGINT,
   rejected BIGINT,
   completed BIGINT
-) AS $
+) AS $$
 BEGIN
   RETURN QUERY
   SELECT 
@@ -162,18 +154,10 @@ BEGIN
   WHERE NOT EXISTS (SELECT 1 FROM client_stats_mv WHERE agency_id = p_agency_id)
   LIMIT 1;
 END;
-$ LANGUAGE plpgsql;
-
--- Grant permissions for new functions
-GRANT EXECUTE ON FUNCTION search_clients TO authenticated;
-GRANT EXECUTE ON FUNCTION count_clients TO authenticated;
-GRANT EXECUTE ON FUNCTION get_client_stats TO authenticated;
-GRANT SELECT ON client_stats_mv TO authenticated;
-
--- Add table statistics for query planner optimization
-ANALYZE clients;
+$$ LANGUAGE plpgsql;
 
 -- Initial refresh of materialized view
 REFRESH MATERIALIZED VIEW client_stats_mv;
 
-COMMIT;
+-- Add table statistics for query planner optimization
+ANALYZE clients;

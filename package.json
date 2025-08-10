@@ -1,0 +1,63 @@
+{
+  "name": "visa-manager-app",
+  "version": "0.3.1",
+  "description": "Comprehensive visa management application with client management, task assignment, and real-time updates",
+  "private": true,
+  "workspaces": [
+    "visa_manager_frontend",
+    "visa-manager-backend"
+  ],
+  "scripts": {
+    "test": "yarn test:backend && yarn test:frontend",
+    "test:backend": "cd visa-manager-backend && yarn test",
+    "test:frontend": "cd visa_manager_frontend && yarn test",
+    "test:coverage": "yarn test:backend:coverage && yarn test:frontend:coverage",
+    "test:backend:coverage": "cd visa-manager-backend && yarn test:coverage",
+    "test:frontend:coverage": "cd visa_manager_frontend && yarn test --coverage",
+    "test:e2e": "cd visa_manager_frontend && yarn test __tests__/e2e",
+    "test:integration": "cd visa-manager-backend && yarn test __tests__/clients.api.integration.test.ts",
+    "test:rls": "cd visa-manager-backend && yarn test __tests__/database.rls.test.ts",
+    "test:websocket": "cd visa-manager-backend && yarn test __tests__/websocket.realtime.test.ts",
+    "test:watch": "yarn test:backend:watch & yarn test:frontend:watch",
+    "test:backend:watch": "cd visa-manager-backend && yarn test:watch",
+    "test:frontend:watch": "cd visa_manager_frontend && yarn test --watch",
+    "build": "yarn build:backend && yarn build:frontend",
+    "build:backend": "cd visa-manager-backend && yarn build",
+    "build:frontend": "cd visa_manager_frontend && yarn android:build",
+    "start": "yarn start:backend & yarn start:frontend",
+    "start:backend": "cd visa-manager-backend && yarn start",
+    "start:frontend": "cd visa_manager_frontend && yarn start",
+    "lint": "yarn lint:backend && yarn lint:frontend",
+    "lint:backend": "cd visa-manager-backend && yarn lint",
+    "lint:frontend": "cd visa_manager_frontend && yarn lint",
+    "clean": "yarn clean:backend && yarn clean:frontend",
+    "clean:backend": "cd visa-manager-backend && rm -rf dist node_modules",
+    "clean:frontend": "cd visa_manager_frontend && yarn clean",
+    "install:all": "yarn install && cd visa-manager-backend && yarn install && cd ../visa_manager_frontend && yarn install"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.0",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=18",
+    "yarn": ">=1.22.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/code-craka/visa-manager-app.git"
+  },
+  "keywords": [
+    "visa-management",
+    "react-native",
+    "nodejs",
+    "typescript",
+    "postgresql",
+    "real-time",
+    "websocket",
+    "material-design"
+  ],
+  "author": "Sayem Abdullah Rihan",
+  "license": "MIT"
+}

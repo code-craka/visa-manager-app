@@ -2,8 +2,14 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/src/routes/', '/src/migrations/'],
+  testMatch: [
+    '**/__tests__/**/*.test.ts',
+    '**/?(*.)+(spec|test).ts',
+  ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+  ],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
@@ -12,11 +18,22 @@ module.exports = {
     '!src/**/*.d.ts',
     '!src/index.ts',
     '!src/db.ts',
+    '!src/migrations/**',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  testTimeout: 30000,
+  maxWorkers: 1, // Run tests sequentially for database tests
 };
