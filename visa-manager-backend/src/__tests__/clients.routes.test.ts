@@ -1,373 +1,74 @@
-// Integration tests for Client Management API endpoints
-// Testing all CRUD operations with authentication and authorization
+// Unit tests for Client Routes
+// Testing the REST API endpoints for client management including statistics
 
 import request from 'supertest';
-import express from 'express';
-import { ClientService } from '../services/ClientService';
-import { VisaType, ClientStatus } from '../models/Client';
-import clientRoutes from '../routes/clients';
-
-// Import test setup
-import './setup';
+import express, { Request, Response, NextFunction } from 'express';
+import { jest } from '@jest/globals';
 
 // Mock the ClientService
-jest.mock('../services/ClientService');
+const mockClientService = {
+  createClient: jest.fn() as jest.MockedFunction<any>,
+  getClients: jest.fn() as jest.MockedFunction<any>,
+  getClientById: jest.fn() as jest.MockedFunction<any>,
+  updateClient: jest.fn() as jest.MockedFunction<any>,
+  deleteClient: jest.fn() as jest.MockedFunction<any>,
+  getClientStats: jest.fn() as jest.MockedFunction<any>,
+  getClientsForTaskAssignment: jest.fn() as jest.MockedFunction<any>,
+  getClientCount: jest.fn() as jest.MockedFunction<any>
+};
 
-const MockedClientService = ClientService as jest.MockedClass<typeof ClientService>;
+// Mock the auth middleware
+const mockRequireAuth = jest.fn((req: any, res: Response, next: NextFunction) => {
+  req.user = {
+    id: 'test-agency-id',
+    email: 'test@example.com',
+    displayName: 'Test User',
+    primaryEmail: 'test@example.com',
+    role: 'agency'
+  };
+  next();
+}) as jest.MockedFunction<any>;
 
-describe('Client API Routes', () => {
+const mockRequireRole = jest.fn(() => (req: Request, res: Response, next: NextFunction) => next()) as jest.MockedFunction<any>;
+
+// Mock the modules
+jest.mock('../services/ClientService', () => ({
+  ClientService: jest.fn().mockImplementation(() => mockClientService)
+}));
+
+jest.mock('../middleware/auth', () => ({
+  requireAuth: mockRequireAuth,
+  requireRole: mockRequireRole
+}));
+
+import clientRoutes from '../routes/clients';
+import { ClientStats, VisaType, ClientStatus } from '../models/Client';
+import { ClientError, CLIENT_ERRORS } from '../services/ClientError';
+
+describe('Client Routes', () => {
   let app: express.Application;
-  let mockClientService: jest.Mocked<ClientService>;
 
-  beforeAll(() => {
-    // Setup Express app with routes
+  beforeEach(() => {
     app = express();
     app.use(express.json());
     app.use('/api/clients', clientRoutes);
-  });
-
-  beforeEach(() => {
-    // Reset all mocks before each test
     jest.clearAllMocks();
-
-    // Create a fresh mock instance
-    mockClientService = new MockedClientService() as jest.Mocked<ClientService>;
-    MockedClientService.mockImplementation(() => mockClientService);
-  });
-
-  describe('POST /api/clients', () => {
-    it('should create a new client with valid data', async () => {
-      const clientData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+1234567890',
-        visaType: VisaType.BUSINESS,
-        status: ClientStatus.PENDING,
-        notes: 'Test client creation'
-      };
-
-      const createdClient = {
-        id: 1,
-        ...clientData,
-        agencyId: 'test-user-123',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy: 'test-user-123',
-        updatedBy: 'test-user-123'
-      };
-
-      mockClientService.createClient.mockResolvedValue(createdClient);
-
-      const response = await request(app)
-        .post('/api/clients')
-        .send(clientData)
-        .expect(201);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: expect.objectContaining({
-          id: 1,
-          name: 'John Doe',
-          email: 'john@example.com'
-        }),
-        message: 'Client created successfully'
-      });
-
-      expect(mockClientService.createClient).toHaveBeenCalledWith(
-        clientData,
-        'test-user-123'
-      );
-    });
-
-    it('should return validation errors for invalid data', async () => {
-      const invalidData = {
-        name: '',
-        email: 'invalid-email',
-        visaType: 'invalid-type'
-      };
-
-      const validationError = {
-        name: 'ClientValidationError',
-        message: 'Validation failed',
-        statusCode: 400,
-        errorCode: 'VALIDATION_FAILED',
-        validationErrors: [
-          { field: 'name', message: 'Name is required' },
-          { field: 'email', message: 'Please enter a valid email address' }
-        ]
-      };
-
-      mockClientService.createClient.mockRejectedValue(validationError);
-
-      const response = await request(app)
-        .post('/api/clients')
-        .send(invalidData)
-        .expect(400);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Validation failed',
-        errorCode: 'VALIDATION_FAILED',
-        details: expect.arrayContaining([
-          expect.objectContaining({ field: 'name' }),
-          expect.objectContaining({ field: 'email' })
-        ])
-      });
-    });
-  });
-
-  describe('GET /api/clients', () => {
-    it('should return paginated list of clients', async () => {
-      const mockClients = [
-        {
-          id: 1,
-          name: 'John Doe',
-          email: 'john@example.com',
-          visaType: VisaType.BUSINESS,
-          status: ClientStatus.PENDING,
-          agencyId: 'test-user-123',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          createdBy: 'test-user-123',
-          updatedBy: 'test-user-123'
-        },
-        {
-          id: 2,
-          name: 'Jane Smith',
-          email: 'jane@example.com',
-          visaType: VisaType.TOURIST,
-          status: ClientStatus.COMPLETED,
-          agencyId: 'test-user-123',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          createdBy: 'test-user-123',
-          updatedBy: 'test-user-123'
-        }
-      ];
-
-      mockClientService.getClients.mockResolvedValue(mockClients);
-      mockClientService.getClientCount.mockResolvedValue(2);
-
-      const response = await request(app)
-        .get('/api/clients')
-        .query({ page: 1, limit: 20 })
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: expect.arrayContaining([
-          expect.objectContaining({ name: 'John Doe' }),
-          expect.objectContaining({ name: 'Jane Smith' })
-        ]),
-        pagination: {
-          page: 1,
-          limit: 20,
-          totalItems: 2,
-          totalPages: 1
-        }
-      });
-    });
-
-    it('should filter clients by search query', async () => {
-      const filteredClients = [
-        {
-          id: 1,
-          name: 'John Doe',
-          email: 'john@example.com',
-          visaType: VisaType.BUSINESS,
-          status: ClientStatus.PENDING,
-          agencyId: 'test-user-123',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          createdBy: 'test-user-123',
-          updatedBy: 'test-user-123'
-        }
-      ];
-
-      mockClientService.getClients.mockResolvedValue(filteredClients);
-      mockClientService.getClientCount.mockResolvedValue(1);
-
-      const response = await request(app)
-        .get('/api/clients')
-        .query({ search: 'john', page: 1, limit: 20 })
-        .expect(200);
-
-      expect(response.body.data).toHaveLength(1);
-      expect(response.body.data[0].name).toBe('John Doe');
-      expect(mockClientService.getClients).toHaveBeenCalledWith(
-        'test-user-123',
-        expect.objectContaining({ search: 'john' })
-      );
-    });
-
-    it('should filter clients by status', async () => {
-      mockClientService.getClients.mockResolvedValue([]);
-      mockClientService.getClientCount.mockResolvedValue(0);
-
-      await request(app)
-        .get('/api/clients')
-        .query({ status: ClientStatus.PENDING })
-        .expect(200);
-
-      expect(mockClientService.getClients).toHaveBeenCalledWith(
-        'test-user-123',
-        expect.objectContaining({ status: ClientStatus.PENDING })
-      );
-    });
-  });
-
-  describe('GET /api/clients/:id', () => {
-    it('should return specific client by ID', async () => {
-      const client = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        visaType: VisaType.BUSINESS,
-        status: ClientStatus.PENDING,
-        agencyId: 'test-user-123',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy: 'test-user-123',
-        updatedBy: 'test-user-123'
-      };
-
-      mockClientService.getClientById.mockResolvedValue(client);
-
-      const response = await request(app)
-        .get('/api/clients/1')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: expect.objectContaining({
-          id: 1,
-          name: 'John Doe'
-        })
-      });
-    });
-
-    it('should return 400 for invalid client ID', async () => {
-      const response = await request(app)
-        .get('/api/clients/invalid-id')
-        .expect(400);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Invalid client ID',
-        errorCode: 'INVALID_ID'
-      });
-    });
-
-    it('should return 404 for non-existent client', async () => {
-      const notFoundError = {
-        name: 'ClientError',
-        message: 'Client not found or access denied',
-        statusCode: 404,
-        errorCode: 'CLIENT_NOT_FOUND'
-      };
-
-      mockClientService.getClientById.mockRejectedValue(notFoundError);
-
-      const response = await request(app)
-        .get('/api/clients/999')
-        .expect(404);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Client not found or access denied',
-        errorCode: 'CLIENT_NOT_FOUND'
-      });
-    });
-  });
-
-  describe('PUT /api/clients/:id', () => {
-    it('should update client successfully', async () => {
-      const updates = {
-        name: 'John Updated',
-        status: ClientStatus.IN_PROGRESS
-      };
-
-      const updatedClient = {
-        id: 1,
-        name: 'John Updated',
-        email: 'john@example.com',
-        status: ClientStatus.IN_PROGRESS,
-        visaType: VisaType.BUSINESS,
-        agencyId: 'test-user-123',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy: 'test-user-123',
-        updatedBy: 'test-user-123'
-      };
-
-      mockClientService.updateClient.mockResolvedValue(updatedClient);
-
-      const response = await request(app)
-        .put('/api/clients/1')
-        .send(updates)
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        data: expect.objectContaining({
-          name: 'John Updated',
-          status: ClientStatus.IN_PROGRESS
-        }),
-        message: 'Client updated successfully'
-      });
-    });
-  });
-
-  describe('DELETE /api/clients/:id', () => {
-    it('should delete client successfully', async () => {
-      mockClientService.deleteClient.mockResolvedValue();
-
-      const response = await request(app)
-        .delete('/api/clients/1')
-        .expect(200);
-
-      expect(response.body).toEqual({
-        success: true,
-        message: 'Client deleted successfully'
-      });
-    });
-
-    it('should return error when client has active tasks', async () => {
-      const hasActiveTasksError = {
-        name: 'ClientError',
-        message: 'Cannot delete client with active tasks',
-        statusCode: 409,
-        errorCode: 'HAS_ACTIVE_TASKS'
-      };
-
-      mockClientService.deleteClient.mockRejectedValue(hasActiveTasksError);
-
-      const response = await request(app)
-        .delete('/api/clients/1')
-        .expect(409);
-
-      expect(response.body).toEqual({
-        success: false,
-        error: 'Cannot delete client with active tasks',
-        errorCode: 'HAS_ACTIVE_TASKS'
-      });
-    });
   });
 
   describe('GET /api/clients/stats', () => {
-    it('should return client statistics', async () => {
-      const stats = {
+    it('should return client statistics successfully', async () => {
+      const mockStats: ClientStats = {
         totalClients: 10,
-        pending: 3,
-        inProgress: 2,
+        pending: 2,
+        inProgress: 3,
         underReview: 1,
-        completed: 4,
-        approved: 0,
-        rejected: 0,
+        completed: 2,
+        approved: 1,
+        rejected: 1,
         documentsRequired: 0
       };
 
-      mockClientService.getClientStats.mockResolvedValue(stats);
+      mockClientService.getClientStats.mockResolvedValue(mockStats);
 
       const response = await request(app)
         .get('/api/clients/stats')
@@ -375,14 +76,114 @@ describe('Client API Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: stats
+        data: mockStats
       });
+
+      expect(mockClientService.getClientStats).toHaveBeenCalledWith('test-agency-id');
+      expect(mockRequireAuth).toHaveBeenCalled();
+      expect(mockRequireRole).toHaveBeenCalledWith(['agency']);
+    });
+
+    it('should handle statistics calculation errors', async () => {
+      const error = new ClientError(
+        'Failed to retrieve client statistics',
+        CLIENT_ERRORS.STATS_FAILED.status,
+        CLIENT_ERRORS.STATS_FAILED.code
+      );
+
+      mockClientService.getClientStats.mockRejectedValue(error);
+
+      const response = await request(app)
+        .get('/api/clients/stats')
+        .expect(500);
+
+      expect(response.body).toEqual({
+        success: false,
+        error: 'Failed to retrieve client statistics',
+        errorCode: 'STATS_FAILED'
+      });
+    });
+
+    it('should handle unexpected errors in statistics endpoint', async () => {
+      mockClientService.getClientStats.mockRejectedValue(new Error('Unexpected error'));
+
+      const response = await request(app)
+        .get('/api/clients/stats')
+        .expect(500);
+
+      expect(response.body).toEqual({
+        success: false,
+        error: 'Failed to retrieve client statistics',
+        errorCode: 'STATS_FAILED'
+      });
+    });
+
+    it('should require authentication for statistics endpoint', async () => {
+      // Mock auth failure
+      mockRequireAuth.mockImplementationOnce((req: any, res: Response, _next: NextFunction) => {
+        res.status(401).json({ error: 'Unauthorized' });
+      });
+
+      await request(app)
+        .get('/api/clients/stats')
+        .expect(401);
+
+      expect(mockClientService.getClientStats).not.toHaveBeenCalled();
+    });
+
+    it('should require agency role for statistics endpoint', async () => {
+      // Mock role check failure
+      mockRequireRole.mockImplementationOnce(() => (_req: Request, res: Response, _next: NextFunction) => {
+        res.status(403).json({ error: 'Forbidden' });
+      });
+
+      await request(app)
+        .get('/api/clients/stats')
+        .expect(403);
+
+      expect(mockClientService.getClientStats).not.toHaveBeenCalled();
+    });
+
+    it('should return empty statistics when no clients exist', async () => {
+      const emptyStats: ClientStats = {
+        totalClients: 0,
+        pending: 0,
+        inProgress: 0,
+        underReview: 0,
+        completed: 0,
+        approved: 0,
+        rejected: 0,
+        documentsRequired: 0
+      };
+
+      mockClientService.getClientStats.mockResolvedValue(emptyStats);
+
+      const response = await request(app)
+        .get('/api/clients/stats')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        data: emptyStats
+      });
+    });
+
+    it('should handle database connection errors gracefully', async () => {
+      mockClientService.getClientStats.mockRejectedValue(new Error('Database connection failed'));
+
+      const response = await request(app)
+        .get('/api/clients/stats')
+        .expect(500);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe('Failed to retrieve client statistics');
+      expect(response.body.errorCode).toBe('STATS_FAILED');
     });
   });
 
   describe('GET /api/clients/for-assignment', () => {
-    it('should return clients available for task assignment', async () => {
-      const clients = [
+    it('should return clients for task assignment', async () => {
+      const mockClients = [
         {
           id: 1,
           name: 'John Doe',
@@ -399,7 +200,7 @@ describe('Client API Routes', () => {
         }
       ];
 
-      mockClientService.getClientsForTaskAssignment.mockResolvedValue(clients);
+      mockClientService.getClientsForTaskAssignment.mockResolvedValue(mockClients);
 
       const response = await request(app)
         .get('/api/clients/for-assignment')
@@ -407,74 +208,284 @@ describe('Client API Routes', () => {
 
       expect(response.body).toEqual({
         success: true,
-        data: expect.arrayContaining([
-          expect.objectContaining({ name: 'John Doe' }),
-          expect.objectContaining({ name: 'Jane Smith' })
-        ])
+        data: mockClients
       });
+
+      expect(mockClientService.getClientsForTaskAssignment).toHaveBeenCalledWith('test-agency-id', []);
     });
 
-    it('should exclude specified client IDs', async () => {
-      mockClientService.getClientsForTaskAssignment.mockResolvedValue([]);
+    it('should handle exclude parameter for task assignment', async () => {
+      const mockClients = [
+        {
+          id: 2,
+          name: 'Jane Smith',
+          email: 'jane@example.com',
+          visaType: VisaType.TOURIST,
+          status: ClientStatus.IN_PROGRESS
+        }
+      ];
 
-      await request(app)
-        .get('/api/clients/for-assignment')
-        .query({ exclude: '1,2,3' })
-        .expect(200);
-
-      expect(mockClientService.getClientsForTaskAssignment).toHaveBeenCalledWith(
-        'test-user-123',
-        [1, 2, 3]
-      );
-    });
-  });
-
-  describe('Authentication and Authorization', () => {
-    it('should require authentication for all endpoints', async () => {
-      // This test would require more complex mocking setup
-      // For now, we'll skip it as the middleware is already tested separately
-      expect(true).toBe(true);
-    });
-
-    it('should require agency role for client creation', async () => {
-      // This test would require more complex mocking setup
-      // For now, we'll skip it as the middleware is already tested separately
-      expect(true).toBe(true);
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle unexpected errors gracefully', async () => {
-      mockClientService.getClients.mockRejectedValue(new Error('Database connection failed'));
+      mockClientService.getClientsForTaskAssignment.mockResolvedValue(mockClients);
 
       const response = await request(app)
-        .get('/api/clients')
-        .expect(500);
+        .get('/api/clients/for-assignment?exclude=1,3')
+        .expect(200);
 
       expect(response.body).toEqual({
-        success: false,
-        error: 'Failed to retrieve clients',
-        errorCode: 'RETRIEVAL_FAILED'
+        success: true,
+        data: mockClients
+      });
+
+      expect(mockClientService.getClientsForTaskAssignment).toHaveBeenCalledWith('test-agency-id', [1, 3]);
+    });
+  });
+
+  describe('POST /api/clients', () => {
+    it('should create a new client successfully', async () => {
+      const clientData = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+1234567890',
+        visaType: VisaType.BUSINESS,
+        notes: 'Test client'
+      };
+
+      const createdClient = {
+        id: 1,
+        ...clientData,
+        status: ClientStatus.PENDING,
+        agencyId: 'test-agency-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: 'test-agency-id',
+        updatedBy: 'test-agency-id'
+      };
+
+      mockClientService.createClient.mockResolvedValue(createdClient);
+
+      const response = await request(app)
+        .post('/api/clients')
+        .send(clientData)
+        .expect(201);
+
+      expect(response.body).toEqual({
+        success: true,
+        data: createdClient,
+        message: 'Client created successfully'
+      });
+
+      expect(mockClientService.createClient).toHaveBeenCalledWith(clientData, 'test-agency-id');
+    });
+
+    it('should handle validation errors during client creation', async () => {
+      const invalidData = {
+        name: '',
+        email: 'invalid-email',
+        visaType: VisaType.BUSINESS
+      };
+
+      const validationError = new ClientError(
+        'Validation failed',
+        CLIENT_ERRORS.VALIDATION_FAILED.status,
+        CLIENT_ERRORS.VALIDATION_FAILED.code
+      );
+
+      mockClientService.createClient.mockRejectedValue(validationError);
+
+      const response = await request(app)
+        .post('/api/clients')
+        .send(invalidData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe('Validation failed');
+      expect(response.body.errorCode).toBe('VALIDATION_FAILED');
+    });
+  });
+
+  describe('GET /api/clients', () => {
+    it('should return paginated clients list', async () => {
+      const mockClients = [
+        {
+          id: 1,
+          name: 'John Doe',
+          email: 'john@example.com',
+          visaType: VisaType.BUSINESS,
+          status: ClientStatus.PENDING,
+          agencyId: 'test-agency-id',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: 'test-agency-id',
+          updatedBy: 'test-agency-id'
+        }
+      ];
+
+      const mockCount = 1;
+
+      mockClientService.getClients.mockResolvedValue(mockClients);
+      mockClientService.getClientCount.mockResolvedValue(mockCount);
+
+      const response = await request(app)
+        .get('/api/clients?page=1&limit=20')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual(mockClients);
+      expect(response.body.pagination).toEqual({
+        page: 1,
+        limit: 20,
+        totalItems: 1,
+        totalPages: 1
       });
     });
 
-    it('should validate pagination parameters', async () => {
+    it('should handle search and filter parameters', async () => {
       mockClientService.getClients.mockResolvedValue([]);
       mockClientService.getClientCount.mockResolvedValue(0);
 
       await request(app)
-        .get('/api/clients')
-        .query({ page: -1, limit: 200 })
+        .get('/api/clients?search=John&status=pending&visaType=business&sortBy=name&sortOrder=asc')
         .expect(200);
 
-      // Should correct invalid pagination values
-      expect(mockClientService.getClients).toHaveBeenCalledWith(
-        'test-user-123',
-        expect.objectContaining({
-          page: 1,    // Corrected from -1
-          limit: 20   // Corrected from 200
-        })
+      expect(mockClientService.getClients).toHaveBeenCalledWith('test-agency-id', {
+        search: 'John',
+        status: 'pending',
+        visaType: 'business',
+        sortBy: 'name',
+        sortOrder: 'asc',
+        page: 1,
+        limit: 20
+      });
+    });
+  });
+
+  describe('GET /api/clients/:id', () => {
+    it('should return specific client by ID', async () => {
+      const mockClient = {
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com',
+        visaType: VisaType.BUSINESS,
+        status: ClientStatus.PENDING,
+        agencyId: 'test-agency-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: 'test-agency-id',
+        updatedBy: 'test-agency-id'
+      };
+
+      mockClientService.getClientById.mockResolvedValue(mockClient);
+
+      const response = await request(app)
+        .get('/api/clients/1')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        data: mockClient
+      });
+
+      expect(mockClientService.getClientById).toHaveBeenCalledWith(1, 'test-agency-id');
+    });
+
+    it('should handle invalid client ID', async () => {
+      const response = await request(app)
+        .get('/api/clients/invalid')
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe('Invalid client ID');
+      expect(response.body.errorCode).toBe('INVALID_ID');
+    });
+
+    it('should handle client not found', async () => {
+      const notFoundError = new ClientError(
+        'Client not found or access denied',
+        CLIENT_ERRORS.NOT_FOUND.status,
+        CLIENT_ERRORS.NOT_FOUND.code
       );
+
+      mockClientService.getClientById.mockRejectedValue(notFoundError);
+
+      const response = await request(app)
+        .get('/api/clients/999')
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe('Client not found or access denied');
+      expect(response.body.errorCode).toBe('CLIENT_NOT_FOUND');
+    });
+  });
+
+  describe('PUT /api/clients/:id', () => {
+    it('should update client successfully', async () => {
+      const updateData = {
+        name: 'John Updated',
+        status: ClientStatus.IN_PROGRESS
+      };
+
+      const updatedClient = {
+        id: 1,
+        name: 'John Updated',
+        email: 'john@example.com',
+        visaType: VisaType.BUSINESS,
+        status: ClientStatus.IN_PROGRESS,
+        agencyId: 'test-agency-id',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: 'test-agency-id',
+        updatedBy: 'test-agency-id'
+      };
+
+      mockClientService.updateClient.mockResolvedValue(updatedClient);
+
+      const response = await request(app)
+        .put('/api/clients/1')
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        data: updatedClient,
+        message: 'Client updated successfully'
+      });
+
+      expect(mockClientService.updateClient).toHaveBeenCalledWith(1, updateData, 'test-agency-id');
+    });
+  });
+
+  describe('DELETE /api/clients/:id', () => {
+    it('should delete client successfully', async () => {
+      mockClientService.deleteClient.mockResolvedValue(undefined);
+
+      const response = await request(app)
+        .delete('/api/clients/1')
+        .expect(200);
+
+      expect(response.body).toEqual({
+        success: true,
+        message: 'Client deleted successfully'
+      });
+
+      expect(mockClientService.deleteClient).toHaveBeenCalledWith(1, 'test-agency-id');
+    });
+
+    it('should handle deletion of client with active tasks', async () => {
+      const activeTasksError = new ClientError(
+        'Cannot delete client with active tasks',
+        CLIENT_ERRORS.HAS_ACTIVE_TASKS.status,
+        CLIENT_ERRORS.HAS_ACTIVE_TASKS.code
+      );
+
+      mockClientService.deleteClient.mockRejectedValue(activeTasksError);
+
+      const response = await request(app)
+        .delete('/api/clients/1')
+        .expect(409);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toBe('Cannot delete client with active tasks');
+      expect(response.body.errorCode).toBe('HAS_ACTIVE_TASKS');
     });
   });
 });

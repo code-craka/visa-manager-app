@@ -503,6 +503,51 @@ class ClientController {
       }
     }
   }
+
+  /**
+   * Validate email uniqueness
+   * GET /api/clients/validate-email
+   */
+  async validateEmailUniqueness(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const email = req.query.email as string;
+      const excludeId = req.query.excludeId ? parseInt(req.query.excludeId as string) : undefined;
+      const userId = req.user!.id;
+
+      if (!email || typeof email !== 'string') {
+        res.status(400).json({
+          success: false,
+          error: 'Email parameter is required',
+          errorCode: 'MISSING_EMAIL'
+        } as ApiErrorResponse);
+        return;
+      }
+
+      // Basic email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        res.json({
+          success: true,
+          data: { isUnique: false, reason: 'Invalid email format' }
+        } as ApiSuccessResponse<{ isUnique: boolean; reason?: string }>);
+        return;
+      }
+
+      const isUnique = await this.clientService.isEmailUnique(email.toLowerCase(), userId, excludeId);
+
+      res.json({
+        success: true,
+        data: { isUnique }
+      } as ApiSuccessResponse<{ isUnique: boolean }>);
+    } catch (error: any) {
+      console.error('Error validating email uniqueness:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to validate email',
+        errorCode: 'VALIDATION_FAILED'
+      } as ApiErrorResponse);
+    }
+  }
 }
 
 // Initialize router and controller
@@ -535,6 +580,15 @@ router.get('/partner-accessible',
   requireRole(['partner']),
   async (req: AuthenticatedRequest, res: Response) => {
     await clientController.getPartnerAccessibleClients(req, res);
+  }
+);
+
+// Email validation endpoint
+router.get('/validate-email',
+  requireAuth,
+  requireRole(['agency']),
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.validateEmailUniqueness(req, res);
   }
 );
 

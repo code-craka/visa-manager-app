@@ -93,6 +93,7 @@ export interface ApiErrorResponse {
   success: false;
   error: string;
   errorCode?: string;
+  statusCode?: number;
   details?: ValidationError[];
 }
 

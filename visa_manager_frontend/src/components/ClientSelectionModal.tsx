@@ -195,11 +195,9 @@ const ClientSelectionModal: React.FC<ClientSelectionModalProps> = ({
     { key: ClientStatus.COMPLETED, label: 'Completed' },
   ], []);
 
-  // Client item renderer
-  const renderClientItem = useCallback(({ item }: { item: Client }) => {
-    const isSelected = state.selectedClientId === item.id;
-
-    return (
+  // Memoized client item component for performance
+  const ClientSelectionItem = React.memo<{ item: Client; isSelected: boolean }>(
+    ({ item, isSelected }) => (
       <Card
         style={[
           styles.clientCard,
@@ -278,8 +276,24 @@ const ClientSelectionModal: React.FC<ClientSelectionModalProps> = ({
           )}
         </Card.Content>
       </Card>
-    );
-  }, [state.selectedClientId, handleClientSelect, getStatusColor, getVisaTypeIcon]);
+    ),
+    (prevProps, nextProps) => {
+      return (
+        prevProps.item.id === nextProps.item.id &&
+        prevProps.item.name === nextProps.item.name &&
+        prevProps.item.email === nextProps.item.email &&
+        prevProps.item.status === nextProps.item.status &&
+        prevProps.item.visaType === nextProps.item.visaType &&
+        prevProps.isSelected === nextProps.isSelected
+      );
+    }
+  );
+
+  // Client item renderer
+  const renderClientItem = useCallback(({ item }: { item: Client }) => {
+    const isSelected = state.selectedClientId === item.id;
+    return <ClientSelectionItem item={item} isSelected={isSelected} />;
+  }, [state.selectedClientId]);
 
   // Load clients when modal becomes visible
   useEffect(() => {

@@ -25,6 +25,16 @@ export interface DashboardStats {
   paidCommission: number;
   totalEarned?: number;
   total_earned?: number; // Legacy support
+  // Client statistics breakdown
+  clientStats?: {
+    pending: number;
+    inProgress: number;
+    underReview: number;
+    completed: number;
+    approved: number;
+    rejected: number;
+    documentsRequired: number;
+  };
 }
 
 export interface Task {

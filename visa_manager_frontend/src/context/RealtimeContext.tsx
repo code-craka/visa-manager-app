@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { webSocketService, NotificationUpdate, TaskUpdate, StatsUpdate } from '../services/WebSocketService';
+import { webSocketService, NotificationUpdate, TaskUpdate, StatsUpdate, ClientStatsUpdate } from '../services/WebSocketService';
 import { useAuth } from './AuthContext';
 import { Notification, DashboardStats } from '../services/ApiService';
+import { ClientStats } from '../types/Client';
 
 interface RealtimeContextType {
   isConnected: boolean;
@@ -9,6 +10,7 @@ interface RealtimeContextType {
   notifications: Notification[];
   unreadCount: number;
   dashboardStats: DashboardStats | null;
+  clientStats: ClientStats | null;
   lastUpdate: Date | null;
   connect: () => Promise<void>;
   disconnect: () => void;
@@ -36,6 +38,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
   const [connectionState, setConnectionState] = useState('DISCONNECTED');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [clientStats, setClientStats] = useState<ClientStats | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   // Calculate unread count
@@ -115,10 +118,38 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     };
 
     const handleStatsUpdate = (statsUpdate: StatsUpdate) => {
-      setDashboardStats(prev => ({
-        ...prev,
-        ...statsUpdate
-      }));
+      setDashboardStats(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ...statsUpdate
+        };
+      });
+      setLastUpdate(new Date());
+    };
+
+    const handleClientStatsUpdate = (clientStatsUpdate: ClientStatsUpdate['stats']) => {
+      setClientStats(clientStatsUpdate);
+      
+      // Also update dashboard stats with client information
+      setDashboardStats(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          totalClients: clientStatsUpdate.totalClients,
+          total_clients: clientStatsUpdate.totalClients,
+          clientStats: {
+            pending: clientStatsUpdate.pending,
+            inProgress: clientStatsUpdate.inProgress,
+            underReview: clientStatsUpdate.underReview,
+            completed: clientStatsUpdate.completed,
+            approved: clientStatsUpdate.approved,
+            rejected: clientStatsUpdate.rejected,
+            documentsRequired: clientStatsUpdate.documentsRequired
+          }
+        };
+      });
+      
       setLastUpdate(new Date());
     };
 
@@ -131,6 +162,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     webSocketService.onNotification(handleNotification);
     webSocketService.onTaskUpdate(handleTaskUpdate);
     webSocketService.onStatsUpdate(handleStatsUpdate);
+    webSocketService.onClientStats(handleClientStatsUpdate);
 
     // Monitor connection state changes
     const connectionMonitor = setInterval(handleConnectionChange, 1000);
@@ -163,6 +195,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     notifications,
     unreadCount,
     dashboardStats,
+    clientStats,
     lastUpdate,
     connect,
     disconnect,

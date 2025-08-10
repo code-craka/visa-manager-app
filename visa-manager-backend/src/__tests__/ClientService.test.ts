@@ -237,6 +237,106 @@ describe('ClientService', () => {
         expect(error).toBeDefined();
       }
     });
+
+    it('should calculate client statistics correctly', async () => {
+      // Mock database response with sample statistics
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          total_clients: '10',
+          pending: '2',
+          completed: '3',
+          in_progress: '2',
+          under_review: '1',
+          approved: '1',
+          rejected: '1',
+          documents_required: '0'
+        }]
+      });
+
+      const stats = await clientService.getClientStats('test-agency-id');
+
+      expect(stats).toBeDefined();
+      expect(stats.totalClients).toBe(10);
+      expect(stats.pending).toBe(2);
+      expect(stats.completed).toBe(3);
+      expect(stats.inProgress).toBe(2);
+      expect(stats.underReview).toBe(1);
+      expect(stats.approved).toBe(1);
+      expect(stats.rejected).toBe(1);
+      expect(stats.documentsRequired).toBe(0);
+
+      // Verify the correct query was called
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('COUNT(*) as total_clients'),
+        ['test-agency-id']
+      );
+    });
+
+    it('should handle empty statistics gracefully', async () => {
+      // Mock database response with no clients
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          total_clients: '0',
+          pending: '0',
+          completed: '0',
+          in_progress: '0',
+          under_review: '0',
+          approved: '0',
+          rejected: '0',
+          documents_required: '0'
+        }]
+      });
+
+      const stats = await clientService.getClientStats('test-agency-id');
+
+      expect(stats).toBeDefined();
+      expect(stats.totalClients).toBe(0);
+      expect(stats.pending).toBe(0);
+      expect(stats.completed).toBe(0);
+      expect(stats.inProgress).toBe(0);
+      expect(stats.underReview).toBe(0);
+      expect(stats.approved).toBe(0);
+      expect(stats.rejected).toBe(0);
+      expect(stats.documentsRequired).toBe(0);
+    });
+
+    it('should handle database errors in getClientStats', async () => {
+      // Mock database error
+      mockQuery.mockRejectedValueOnce(new Error('Database connection failed'));
+
+      try {
+        await clientService.getClientStats('test-agency-id');
+        fail('Should have thrown STATS_FAILED error');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ClientError);
+        expect((error as any).errorCode).toBe('STATS_FAILED');
+        expect((error as any).statusCode).toBe(500);
+        expect((error as any).message).toContain('Failed to retrieve client statistics');
+      }
+    });
+
+    it('should enforce Row-Level Security in statistics query', async () => {
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          total_clients: '5',
+          pending: '1',
+          completed: '2',
+          in_progress: '1',
+          under_review: '1',
+          approved: '0',
+          rejected: '0',
+          documents_required: '0'
+        }]
+      });
+
+      await clientService.getClientStats('test-agency-id');
+
+      // Verify the query includes agency_id for RLS
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('WHERE agency_id = $1'),
+        ['test-agency-id']
+      );
+    });
   });
 
   describe('Error Handling Implementation', () => {

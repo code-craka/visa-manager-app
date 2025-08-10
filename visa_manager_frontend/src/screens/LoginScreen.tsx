@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Button } from 'react-native-elements';
-import { SignIn, SignUp } from '@clerk/clerk-expo';
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../styles/theme';
 
@@ -60,53 +59,7 @@ const LoginScreen = ({ navigation }: any) => {
         By continuing, you agree to our Terms of Service and Privacy Policy
       </Text>
 
-      {/* Clerk Sign In Modal */}
-      <Modal
-        visible={showSignIn}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowSignIn(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Sign In</Text>
-            <Button
-              title="Close"
-              type="clear"
-              onPress={() => setShowSignIn(false)}
-              titleStyle={{ color: theme.colors.primary }}
-            />
-          </View>
-          <SignIn 
-            routing="virtual"
-            afterSignInUrl="/"
-          />
-        </View>
-      </Modal>
 
-      {/* Clerk Sign Up Modal */}
-      <Modal
-        visible={showSignUp}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowSignUp(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Create Account</Text>
-            <Button
-              title="Close"
-              type="clear"
-              onPress={() => setShowSignUp(false)}
-              titleStyle={{ color: theme.colors.primary }}
-            />
-          </View>
-          <SignUp
-            routing="virtual"
-            afterSignUpUrl="/"
-          />
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -154,23 +107,7 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff'
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing.medium,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee'
-  },
-  modalTitle: {
-    fontSize: theme.fontSizes.large,
-    fontWeight: 'bold',
-    color: theme.colors.primary
-  }
+
 });
 
 export default LoginScreen;

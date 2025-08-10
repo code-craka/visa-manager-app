@@ -20,7 +20,7 @@ import {
   Badge,
   IconButton
 } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { RestrictedClient, ClientStatus, VisaType } from '../types/Client';
 import ApiService from '../services/ApiService';
@@ -38,13 +38,7 @@ interface PartnerClientDetailScreenProps {
   };
 }
 
-// Navigation component wrapper for React Navigation compatibility
-interface NavigationProps {
-  navigation: any;
-  route: any;
-}
-
-const PartnerClientDetailScreenComponent: React.FC<PartnerClientDetailScreenProps> = ({ 
+const PartnerClientDetailScreen: React.FC<any> = ({ 
   navigation, 
   route 
 }) => {
@@ -438,10 +432,5 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-// Navigation wrapper component
-const PartnerClientDetailScreen: React.FC<NavigationProps> = (props) => {
-  return <PartnerClientDetailScreenComponent {...props} />;
-};
 
 export default PartnerClientDetailScreen;

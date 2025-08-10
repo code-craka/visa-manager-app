@@ -16,7 +16,8 @@ import {
   IconButton,
   Divider,
   Snackbar,
-  Badge
+  Badge,
+  Banner
 } from 'react-native-paper';
 import {
   Client,
@@ -29,6 +30,9 @@ import ApiService from '../services/ApiService';
 import { theme, statusColors, visaTypeIcons } from '../styles/theme';
 import { useAuth } from '../context/AuthContext';
 import { useClientRealtime } from '../hooks/useClientRealtime';
+import { useNetworkStatus, useNetworkAwareRequest } from '../hooks/useNetworkStatus';
+import { useErrorHandler, ClientErrorBoundary } from '../components/ClientErrorBoundary';
+import { usePerformanceMonitor, useRenderPerformance, useListPerformance } from '../hooks/usePerformanceMonitor';
 
 interface ClientListScreenProps {
   navigation?: any; // Optional navigation prop for flexibility
@@ -59,6 +63,15 @@ interface ClientListState {
 const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
   const { getAuthToken } = useAuth();
   
+  // Performance monitoring
+  const { trackRenderStart, trackRenderEnd, trackApiCall, trackCacheHit, trackCacheMiss } = usePerformanceMonitor('ClientListScreen');
+  const { renderCount } = useRenderPerformance('ClientListScreen');
+  
+  // Network status and error handling
+  const { networkStatus, networkError } = useNetworkStatus();
+  const { executeRequest, isRetrying } = useNetworkAwareRequest();
+  const { handleError } = useErrorHandler();
+  
   const [state, setState] = useState<ClientListState>({
     clients: [],
     searchQuery: '',
@@ -81,12 +94,20 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
     realtimeUpdates: 0,
   });
 
-  // Initialize ApiService with auth token getter
+  // Initialize ApiService with auth token getter and user ID
   useEffect(() => {
     if (ApiService && ApiService.setAuthTokenGetter) {
       ApiService.setAuthTokenGetter(getAuthToken);
     }
   }, [getAuthToken]);
+
+  // Set current user ID for caching when user is available
+  useEffect(() => {
+    const { user } = useAuth();
+    if (user?.id && ApiService.setCurrentUserId) {
+      ApiService.setCurrentUserId(user.id);
+    }
+  }, []);
 
   // Real-time WebSocket integration
   const { connect, disconnect, isConnected } = useClientRealtime({
@@ -174,16 +195,77 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
     };
   }, []);
 
-  // Memoized filter options for status chips
-  const statusFilters = useMemo(() => [
-    { key: 'all', label: 'All', count: 0 },
-    { key: ClientStatus.PENDING, label: 'Pending', count: 0 },
-    { key: ClientStatus.IN_PROGRESS, label: 'In Progress', count: 0 },
-    { key: ClientStatus.UNDER_REVIEW, label: 'Under Review', count: 0 },
-    { key: ClientStatus.COMPLETED, label: 'Completed', count: 0 },
-    { key: ClientStatus.APPROVED, label: 'Approved', count: 0 },
-    { key: ClientStatus.REJECTED, label: 'Rejected', count: 0 },
-  ], []);
+  // Memoized filter options for status chips with client counts
+  const statusFilters = useMemo(() => {
+    const counts = state.clients.reduce((acc, client) => {
+      acc[client.status] = (acc[client.status] || 0) + 1;
+      return acc;
+    }, {} as Record<ClientStatus, number>);
+
+    return [
+      { key: 'all', label: 'All', count: state.clients.length },
+      { key: ClientStatus.PENDING, label: 'Pending', count: counts[ClientStatus.PENDING] || 0 },
+      { key: ClientStatus.IN_PROGRESS, label: 'In Progress', count: counts[ClientStatus.IN_PROGRESS] || 0 },
+      { key: ClientStatus.UNDER_REVIEW, label: 'Under Review', count: counts[ClientStatus.UNDER_REVIEW] || 0 },
+      { key: ClientStatus.COMPLETED, label: 'Completed', count: counts[ClientStatus.COMPLETED] || 0 },
+      { key: ClientStatus.APPROVED, label: 'Approved', count: counts[ClientStatus.APPROVED] || 0 },
+      { key: ClientStatus.REJECTED, label: 'Rejected', count: counts[ClientStatus.REJECTED] || 0 },
+    ];
+  }, [state.clients]);
+
+  // Memoized filtered and sorted clients for better performance
+  const filteredAndSortedClients = useMemo(() => {
+    trackRenderStart();
+    
+    let filtered = [...state.clients];
+
+    // Apply search filter if query exists
+    if (state.searchQuery.trim()) {
+      const query = state.searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(client =>
+        client.name.toLowerCase().includes(query) ||
+        client.email.toLowerCase().includes(query) ||
+        client.visaType.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (state.selectedStatus !== 'all') {
+      filtered = filtered.filter(client => client.status === state.selectedStatus);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue: string | Date;
+      let bValue: string | Date;
+
+      switch (state.sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'visaType':
+          aValue = a.visaType.toLowerCase();
+          bValue = b.visaType.toLowerCase();
+          break;
+        case 'date':
+        default:
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+          break;
+      }
+
+      if (aValue < bValue) return state.sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return state.sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    trackRenderEnd();
+    return filtered;
+  }, [state.clients, state.searchQuery, state.selectedStatus, state.sortBy, state.sortOrder, trackRenderStart, trackRenderEnd]);
+
+  // Monitor list performance
+  const { itemCount } = useListPerformance('ClientList', filteredAndSortedClients.length);
 
   // Load clients from API with filtering and pagination
   const loadClients = useCallback(async (
@@ -210,9 +292,22 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
         limit: 20
       };
 
-      const response = await ApiService.getClients(filters);
+      const response = await trackApiCall(
+        () => executeRequest(
+          () => ApiService.getClients(filters),
+          { maxRetries: 2, waitForConnection: true }
+        ),
+        'getClients'
+      );
 
       if (response.success) {
+        // Track cache performance
+        if (response.message?.includes('cache')) {
+          trackCacheHit();
+        } else {
+          trackCacheMiss();
+        }
+
         const newClients = response.data;
         const hasMoreData = response.pagination ?
           (response.pagination.page < response.pagination.totalPages) : false;
@@ -226,9 +321,10 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
           error: null
         }));
       } else {
-        throw new Error((response as any).error);
+        throw new Error(response.error || 'Failed to load clients');
       }
     } catch (error: any) {
+      handleError(error);
       setState(prev => ({
         ...prev,
         error: error.message || 'Failed to load clients',
@@ -236,7 +332,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
         refreshing: false
       }));
     }
-  }, [state.searchQuery, state.selectedStatus, state.sortBy, state.sortOrder, state.page]);
+  }, [state.searchQuery, state.selectedStatus, state.sortBy, state.sortOrder, state.page, executeRequest, handleError, trackApiCall, trackCacheHit, trackCacheMiss]);
 
   // Memoized handlers for performance optimization
   const handleStatusFilter = useCallback((status: ClientStatus | 'all') => {
@@ -361,8 +457,8 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
     return visaTypeIcons[visaType] || 'file-document';
   }, []);
 
-  // Client item renderer with optimized performance
-  const renderClientItem = useCallback(({ item }: { item: Client }) => (
+  // Memoized client item component for performance optimization
+  const ClientItem = React.memo<{ item: Client }>(({ item }) => (
     <Card style={styles.clientCard} onPress={() => handleClientPress(item)}>
       <Card.Content>
         <View style={styles.clientHeader}>
@@ -428,7 +524,23 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
         </View>
       </Card.Content>
     </Card>
-  ), [handleClientPress, handleEditClient, handleDeleteClient, getStatusColor, getVisaTypeIcon]);
+  ), (prevProps, nextProps) => {
+    // Custom comparison function for better performance
+    return (
+      prevProps.item.id === nextProps.item.id &&
+      prevProps.item.name === nextProps.item.name &&
+      prevProps.item.email === nextProps.item.email &&
+      prevProps.item.phone === nextProps.item.phone &&
+      prevProps.item.status === nextProps.item.status &&
+      prevProps.item.visaType === nextProps.item.visaType &&
+      prevProps.item.updatedAt === nextProps.item.updatedAt
+    );
+  });
+
+  // Client item renderer with optimized performance
+  const renderClientItem = useCallback(({ item }: { item: Client }) => (
+    <ClientItem item={item} />
+  ), []);
 
   // Load initial data
   useEffect(() => {
@@ -446,16 +558,45 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Search bar */}
-      <Searchbar
-        placeholder="Search clients by name, email, or visa type..."
-        value={state.searchQuery}
-        onChangeText={debouncedSearch}
-        style={styles.searchBar}
-        iconColor={theme.colors.primary}
-        elevation={2}
-      />
+    <ClientErrorBoundary>
+      <View style={styles.container}>
+        {/* Network status banner */}
+        {networkStatus.isOffline && (
+          <Banner
+            visible={true}
+            actions={[]}
+            icon="wifi-off"
+            style={styles.offlineBanner}
+          >
+            You are currently offline. Data may not be up to date.
+          </Banner>
+        )}
+
+        {/* Retry banner */}
+        {isRetrying && (
+          <Banner
+            visible={true}
+            actions={[]}
+            icon="refresh"
+            style={styles.retryBanner}
+          >
+            <View style={styles.retryContent}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={styles.retryText}>Retrying request...</Text>
+            </View>
+          </Banner>
+        )}
+
+        {/* Search bar */}
+        <Searchbar
+          placeholder="Search clients by name, email, or visa type..."
+          value={state.searchQuery}
+          onChangeText={debouncedSearch}
+          style={styles.searchBar}
+          iconColor={theme.colors.primary}
+          elevation={2}
+          editable={!networkStatus.isOffline}
+        />
 
       {/* Connection status indicator */}
       <View style={styles.connectionStatus}>
@@ -545,7 +686,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
 
       {/* Client list */}
       <FlatList
-        data={state.clients}
+        data={filteredAndSortedClients}
         renderItem={renderClientItem}
         keyExtractor={(item) => item.id.toString()}
         style={styles.clientList}
@@ -589,6 +730,15 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
             </View>
           ) : null
         }
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={10}
+        getItemLayout={(data, index) => ({
+          length: 120, // Approximate height of each client card
+          offset: 120 * index,
+          index,
+        })}
       />
 
       {/* Create client FAB */}
@@ -712,6 +862,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
         {state.snackbarMessage}
       </Snackbar>
     </View>
+  </ClientErrorBoundary>
   );
 };
 
@@ -729,6 +880,19 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: theme.spacing.medium,
     color: theme.colors.onSurface,
+  },
+  offlineBanner: {
+    backgroundColor: theme.colors.errorContainer,
+  },
+  retryBanner: {
+    backgroundColor: theme.colors.primaryContainer,
+  },
+  retryContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  retryText: {
+    marginLeft: theme.spacing.small,
   },
   searchBar: {
     margin: theme.spacing.medium,

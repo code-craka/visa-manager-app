@@ -1,7 +1,7 @@
 # Visa Manager App
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0.4%2F5.9.2-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![React Native](https://img.shields.io/badge/React%20Native-0.80.2-blue?logo=react)](https://reactnative.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-18.x-green?logo=node.js)](https://nodejs.org/)
 [![Yarn](https://img.shields.io/badge/Yarn-v1.22.x-blue?logo=yarn)](https://classic.yarnpkg.com/)
@@ -29,12 +29,13 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 - **📊 Statistics & Pagination** - Client statistics, filtering, sorting, and pagination support
 - **🛡️ Error Handling** - Custom ClientError classes with proper status codes and API responses
 - **🔒 Row-Level Security** - RLS enforcement for all client operations with role-based access
-- **📱 Complete Client Management UI** - ClientListScreen and ClientFormScreen with Material Design
+- **📱 Complete Client Management UI** - ClientListScreen, ClientFormScreen, and EnhancedClientFormScreen with Material Design
 - **🔍 Advanced Search & Filtering** - Debounced search, status filters, sorting, and pagination
-- **📝 Form Validation** - Real-time client form validation with comprehensive error handling
+- **📝 Enhanced Form Validation** - Real-time client form validation with comprehensive error handling and email uniqueness validation
 - **🗑️ Enhanced Delete Operations** - Smart client deletion with active task validation and detailed error messages
 - **🎯 Enhanced Task Assignment** - ClientSelectionModal component with advanced client selection
 - **🔧 Component Integration** - Modular component architecture with reusable selection modals
+- **🔒 Partner Client Access** - PartnerClientDetailScreen with restricted data view and privacy masking
 - **🔴 Real-time Client Updates** - Live WebSocket integration with useClientRealtime hook
 - **📊 Live Statistics Dashboard** - Real-time client statistics with connection status indicators
 - **🔔 Instant Notifications** - Live client creation, update, and deletion notifications

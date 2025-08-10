@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, Alert, ScrollView, Modal, StyleSheet } from 'react-native';
+import { View, Text, Alert, ScrollView, StyleSheet } from 'react-native';
 import { Button, ButtonGroup } from 'react-native-elements';
-import { SignUp } from '@clerk/clerk-expo';
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../styles/theme';
 
@@ -94,31 +93,7 @@ const RegistrationScreen = ({ navigation }: any) => {
         By signing up, you agree to our Terms of Service and Privacy Policy
       </Text>
 
-      {/* Clerk Sign Up Modal */}
-      <Modal
-        visible={showSignUp}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowSignUp(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Create Account</Text>
-            <Button
-              title="Close"
-              type="clear"
-              onPress={() => setShowSignUp(false)}
-              titleStyle={{ color: theme.colors.primary }}
-            />
-          </View>
-          <SignUp 
-            routing="virtual"
-            signInUrl="#"
-            afterSignUpUrl="#"
-            afterSignInUrl="#"
-          />
-        </View>
-      </Modal>
+
     </ScrollView>
   );
 };
@@ -197,23 +172,7 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff'
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: theme.spacing.medium,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee'
-  },
-  modalTitle: {
-    fontSize: theme.fontSizes.large,
-    fontWeight: 'bold',
-    color: theme.colors.primary
-  }
+
 });
 
 export default RegistrationScreen;

@@ -23,7 +23,7 @@ import {
   Badge
 } from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { RestrictedClient, ClientStatus, VisaType } from '../types/Client';
 import ApiService from '../services/ApiService';
@@ -229,7 +229,7 @@ const PartnerClientListScreen: React.FC<PartnerClientListScreenProps> = ({ navig
       <MaterialCommunityIcons
         name="account-search"
         size={64}
-        color={theme.colors.disabled}
+        color={theme.colors.onSurface + '60'}
       />
       <Title style={styles.emptyTitle}>No Accessible Clients</Title>
       <Paragraph style={styles.emptyText}>

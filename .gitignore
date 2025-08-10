@@ -109,6 +109,7 @@ coverage/
 jspm_packages/
 
 # Optional npm cache directory (legacy)
+.npm/cache
 .npm
 
 # Yarn cache and directories
@@ -175,3 +176,5 @@ jspm_packages/
 # Development tools and automation
 .kiro/
 .github/copilot-instructions.md
+.amazonq
+.amazonq/rules

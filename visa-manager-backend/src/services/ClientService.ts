@@ -27,6 +27,37 @@ import { webSocketService } from './WebSocketService';
 
 export class ClientService {
   /**
+   * Check if email is unique within the agency
+   * @param email - Email to check
+   * @param userId - Agency user ID (Clerk user ID)
+   * @param excludeId - Optional client ID to exclude from check (for updates)
+   * @returns Promise<boolean> - True if email is unique
+   */
+  async isEmailUnique(email: string, userId: string, excludeId?: number): Promise<boolean> {
+    try {
+      let query = 'SELECT COUNT(*) FROM clients WHERE LOWER(email) = LOWER($1) AND agency_id = $2';
+      const params: any[] = [email, userId];
+
+      if (excludeId) {
+        query += ' AND id != $3';
+        params.push(excludeId);
+      }
+
+      const result = await pool.query(query, params);
+      const count = parseInt(result.rows[0].count);
+      
+      return count === 0;
+    } catch (error) {
+      console.error('Error checking email uniqueness:', error);
+      throw new ClientError(
+        'Failed to validate email uniqueness',
+        CLIENT_ERRORS.VALIDATION_FAILED.status,
+        CLIENT_ERRORS.VALIDATION_FAILED.code
+      );
+    }
+  }
+
+  /**
    * Create a new client with comprehensive validation
    * @param clientData - Client creation data
    * @param userId - Agency user ID (Clerk user ID)
@@ -384,19 +415,11 @@ export class ClientService {
    */
   async getClientStats(userId: string): Promise<ClientStats> {
     try {
-      const result = await pool.query(`
-        SELECT
-          COUNT(*) as total_clients,
-          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
-          COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as in_progress,
-          COUNT(CASE WHEN status = 'under_review' THEN 1 END) as under_review,
-          COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved,
-          COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected,
-          COUNT(CASE WHEN status = 'documents_required' THEN 1 END) as documents_required
-        FROM clients
-        WHERE agency_id = $1
-      `, [userId]);
+      // Use optimized materialized view function
+      const result = await pool.query(
+        'SELECT * FROM get_client_stats($1)',
+        [userId]
+      );
 
       const stats = result.rows[0];
 

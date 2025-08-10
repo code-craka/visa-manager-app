@@ -70,7 +70,7 @@ interface ValidationState {
   errors: FormErrors;
 }
 
-const ClientFormScreen: React.FC<ClientFormScreenProps> = ({ navigation, route }) => {
+const ClientFormScreen: React.FC<ClientFormScreenProps> = React.memo(({ navigation, route }) => {
   const { user } = useAuth();
   const { clientId, mode } = route?.params || { mode: 'create' };
   const isEditMode = mode === 'edit' && clientId;
@@ -546,7 +546,7 @@ const ClientFormScreen: React.FC<ClientFormScreenProps> = ({ navigation, route }
       </Snackbar>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

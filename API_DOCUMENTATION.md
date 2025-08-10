@@ -306,6 +306,26 @@ Deletes a client. Only accessible by agency users. Prevents deletion if client h
 }
 ```
 
+### Validate Email Uniqueness (Agency Only)
+
+**GET** `/clients/validate-email`
+
+Validates if an email address is unique within the agency. Used for real-time form validation.
+
+**Query Parameters:**
+- `email` (required): Email address to validate
+- `excludeId` (optional): Client ID to exclude from validation (for updates)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "isUnique": true
+  }
+}
+```
+
 ### Get Client Statistics (Agency Only)
 
 **GET** `/clients/stats`

@@ -23,6 +23,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../context/RealtimeContext';
 import { useApiService, DashboardStats, Task, Notification } from '../services/ApiService';
+import { ClientStatsWidget } from '../components';
 import { theme } from '../styles/theme';
 
 const styles = StyleSheet.create({
@@ -211,6 +212,7 @@ const DashboardScreen: React.FC<NavigationProps> = ({ navigation }) => {
     notifications: realtimeNotifications, 
     unreadCount,
     dashboardStats: realtimeStats,
+    clientStats: realtimeClientStats,
     lastUpdate,
     markNotificationAsRead 
   } = useRealtime();
@@ -244,16 +246,20 @@ const DashboardScreen: React.FC<NavigationProps> = ({ navigation }) => {
     try {
       setIsLoading(true);
       const [dashboardStats, tasksResponse, notificationsResponse] = await Promise.all([
-        callApi((token) => apiService.getDashboardStats(token)),
-        callApi((token) => apiService.getTasks(token, { page: 1, limit: 5 })),
-        callApi((token) => apiService.getNotifications(token, 1, 5, true))
+        callApi(() => apiService.getDashboardStats()),
+        callApi(() => apiService.getTasks({ page: 1, limit: 5 })),
+        callApi(() => apiService.getNotifications(1, 5, true))
       ]);
       
-      setStats(dashboardStats);
-      setRecentTasks(tasksResponse.tasks || []);
+      if (dashboardStats) {
+        setStats(dashboardStats);
+      }
+      if (tasksResponse) {
+        setRecentTasks(tasksResponse);
+      }
       // Only use local notifications if no real-time ones are available
-      if (realtimeNotifications.length === 0) {
-        setNotifications(notificationsResponse.notifications || []);
+      if (realtimeNotifications.length === 0 && notificationsResponse) {
+        setNotifications(notificationsResponse);
       }
       setSnackbarMessage(`Dashboard updated successfully ${wsConnected ? '(Live)' : ''}`);
       setSnackbarVisible(true);
@@ -595,6 +601,26 @@ const DashboardScreen: React.FC<NavigationProps> = ({ navigation }) => {
         </Surface>
 
         {renderStatsCard()}
+        
+        {/* Client Statistics Widget - Only show for agencies */}
+        {user?.role === 'agency' && (
+          <ClientStatsWidget 
+            stats={realtimeClientStats || (stats.clientStats ? {
+              totalClients: stats.totalClients || 0,
+              pending: stats.clientStats.pending || 0,
+              inProgress: stats.clientStats.inProgress || 0,
+              underReview: stats.clientStats.underReview || 0,
+              completed: stats.clientStats.completed || 0,
+              approved: stats.clientStats.approved || 0,
+              rejected: stats.clientStats.rejected || 0,
+              documentsRequired: stats.clientStats.documentsRequired || 0
+            } : null)}
+            loading={isLoading}
+            showProgress={true}
+            showStatusBreakdown={true}
+          />
+        )}
+        
         {renderQuickActions()}
         {renderRecentTasks()}
         {renderNotifications()}
