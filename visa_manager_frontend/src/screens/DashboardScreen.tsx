@@ -119,25 +119,25 @@ const styles = StyleSheet.create({
   actionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between'
+    justifyContent: 'space-around'
   },
   actionButton: {
     margin: 4,
-    width: '45%'
+    width: '30%'
   },
   actionButtonGreen: {
     margin: 4,
-    width: '45%',
+    width: '30%',
     backgroundColor: '#4CAF50'
   },
   actionButtonOrange: {
     margin: 4,
-    width: '45%',
+    width: '30%',
     backgroundColor: '#FF9800'
   },
   actionButtonPurple: {
     margin: 4,
-    width: '45%',
+    width: '30%',
     backgroundColor: '#9C27B0'
   },
   notificationBadge: {
@@ -316,6 +316,8 @@ const DashboardScreen: React.FC<NavigationProps> = ({ navigation }) => {
   const handleNavigateToTasks = useCallback(() => navigation.navigate('TaskAssignment'), [navigation]);
   const handleNavigateToCommission = useCallback(() => navigation.navigate('Commission'), [navigation]);
   const handleNavigateToNotifications = useCallback(() => navigation.navigate('Notifications'), [navigation]);
+  const handleCreateClient = useCallback(() => navigation.navigate('Clients', { screen: 'ClientForm', params: { mode: 'create' } }), [navigation]);
+  const handleCreateTask = useCallback(() => navigation.navigate('TaskAssignment'), [navigation]);
 
   const renderStatsCard = () => {
     const isAgency = user?.role === 'agency';
@@ -418,6 +420,17 @@ const DashboardScreen: React.FC<NavigationProps> = ({ navigation }) => {
             >
               {isAgency ? 'Manage Clients' : 'View Tasks'}
             </Button>
+
+            {isAgency && (
+              <Button
+                mode="contained"
+                onPress={handleCreateClient}
+                style={[styles.actionButton, { backgroundColor: '#4CAF50' }]}
+                icon="account-plus"
+              >
+                Add Client
+              </Button>
+            )}
 
             {isAgency && (
               <Button
@@ -657,7 +670,7 @@ const DashboardScreen: React.FC<NavigationProps> = ({ navigation }) => {
         <FAB
           style={styles.fab}
           icon="plus"
-          onPress={handleNavigateToTasks}
+          onPress={handleCreateTask}
           label="New Task"
         />
       )}

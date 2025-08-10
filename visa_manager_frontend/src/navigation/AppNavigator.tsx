@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '../context/AuthContext';
 import { ActivityIndicator, View } from 'react-native';
+import { Button } from 'react-native-paper';
 import { theme } from '../styles/theme';
 
 // Import screens
@@ -31,8 +32,26 @@ type RootStackParamList = {
   ClientList: undefined;
   ClientForm: {
     clientId?: number;
+    client?: any;
     mode: 'create' | 'edit';
   };
+  TaskAssignment: {
+    clientId?: number;
+    taskId?: number;
+    selectedClient?: any;
+  };
+};
+
+type TabParamList = {
+  Dashboard: undefined;
+  Clients: undefined;
+  TaskAssignment: {
+    clientId?: number;
+    taskId?: number;
+    selectedClient?: any;
+  };
+  Commission: undefined;
+  Notifications: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -91,18 +110,42 @@ const ClientStack = () => {
           <Stack.Screen
             name="ClientList"
             component={ClientListScreen}
-            options={{ title: 'Clients', headerShown: false }}
+            options={{ 
+              title: 'Clients', 
+              headerShown: false,
+              headerRight: () => null
+            }}
           />
           <Stack.Screen
             name="ClientForm"
             component={ClientFormScreen}
-            options={{ title: 'Client Form', headerShown: false }}
+            options={({ route }) => ({
+              title: route.params?.mode === 'edit' ? 'Edit Client' : 'Add Client',
+              headerShown: true
+            })}
           />
         </>
       )}
     </Stack.Navigator>
   );
 };
+
+// Task Assignment Stack
+const TaskStack = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: theme.colors.primary },
+      headerTintColor: '#fff',
+      headerTitleStyle: { fontWeight: 'bold' }
+    }}
+  >
+    <Stack.Screen
+      name="TaskAssignment"
+      component={TaskAssignmentScreen}
+      options={{ title: 'Task Assignment', headerShown: true }}
+    />
+  </Stack.Navigator>
+);
 
 // Main App Tabs for authenticated users
 const MainTabs = () => {
@@ -144,12 +187,13 @@ const MainTabs = () => {
       {user?.role === 'agency' && (
         <Tab.Screen
           name="TaskAssignment"
-          component={TaskAssignmentScreen}
+          component={TaskStack}
           options={{
             tabBarIcon: ({ color }) => (
               <View style={{ width: 24, height: 24, backgroundColor: color }} />
             ),
-            title: 'Assign Tasks'
+            title: 'Assign Tasks',
+            headerShown: false
           }}
         />
       )}

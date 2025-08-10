@@ -31,6 +31,7 @@ interface TaskAssignmentScreenProps {
     params?: {
       clientId?: number;
       taskId?: number;
+      selectedClient?: Client;
     };
   };
   navigation: {
@@ -305,7 +306,9 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
 
     // Handle route params
     if (route?.params) {
-      if (route.params.clientId) {
+      if (route.params.selectedClient) {
+        setSelectedClient(route.params.selectedClient);
+      } else if (route.params.clientId) {
         loadSpecificClient(route.params.clientId.toString());
       }
       if (route.params.taskId) {
@@ -316,7 +319,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
   }, [route?.params, loadInitialData, loadSpecificClient, loadSpecificTask]);
 
   const resetForm = useCallback(() => {
-    if (!route?.params?.clientId) {
+    if (!route?.params?.clientId && !route?.params?.selectedClient) {
       setSelectedClient(null);
     }
     if (!route?.params?.taskId) {
@@ -439,7 +442,8 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
 
       <Title style={styles.screenTitle}>Task Assignment</Title>
       <Paragraph style={styles.screenSubtitle}>
-        {assignmentMode === 'new' ? 'Create and assign a new task' : 'Assign existing task to partner'}
+        {selectedClient ? `Assigning task for ${selectedClient.name}` : 
+         assignmentMode === 'new' ? 'Create and assign a new task' : 'Assign existing task to partner'}
       </Paragraph>
 
       {/* Assignment Mode Selector */}
@@ -635,6 +639,7 @@ export default function TaskAssignmentScreen({ route, navigation }: TaskAssignme
           setSelectedClient(client);
           setClientModalVisible(false);
         }}
+        excludeIds={selectedClient ? [selectedClient.id] : undefined}
         title="Select Client for Task Assignment"
         subtitle="Choose a client to assign this task to"
       />

@@ -356,7 +356,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
 
   const handleClientPress = useCallback((client: Client) => {
     if (navigation?.navigate) {
-      navigation.navigate('ClientDetails', { clientId: client.id });
+      navigation.navigate('ClientForm', { clientId: client.id, client, mode: 'edit' });
     } else {
       console.log('Navigate to client details:', client.id);
     }
@@ -364,7 +364,7 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
 
   const handleEditClient = useCallback((client: Client) => {
     if (navigation?.navigate) {
-      navigation.navigate('ClientForm', { clientId: client.id, mode: 'edit' });
+      navigation.navigate('ClientForm', { clientId: client.id, client, mode: 'edit' });
     } else {
       console.log('Navigate to edit client:', client.id);
     }
@@ -375,6 +375,14 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
       navigation.navigate('ClientForm', { mode: 'create' });
     } else {
       console.log('Navigate to create client');
+    }
+  }, [navigation]);
+
+  const handleAssignTask = useCallback((client: Client) => {
+    if (navigation?.navigate) {
+      navigation.navigate('TaskAssignment', { clientId: client.id, selectedClient: client });
+    } else {
+      console.log('Navigate to task assignment for client:', client.id);
     }
   }, [navigation]);
 
@@ -506,6 +514,14 @@ const ClientListScreen: React.FC<ClientListScreenProps> = ({ navigation }) => {
           </View>
 
           <View style={styles.actionButtons}>
+            <IconButton
+              icon="clipboard-plus"
+              size={16}
+              onPress={() => handleAssignTask(item)}
+              style={styles.actionButton}
+              iconColor={theme.colors.primary}
+              testID={`assign-task-${item.id}`}
+            />
             <IconButton
               icon="pencil"
               size={16}
