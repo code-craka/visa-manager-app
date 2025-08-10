@@ -88,7 +88,7 @@ const ClientFormScreen: React.FC<ClientFormScreenProps> = ({ navigation, route }
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [initialLoading, setInitialLoading] = useState<boolean>(isEditMode);
+  const [initialLoading, setInitialLoading] = useState<boolean>(!!isEditMode);
 
   // UI state
   const [visaTypeMenuVisible, setVisaTypeMenuVisible] = useState(false);

@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.1] - 2025-08-09 (Current)
+## [0.3.1] - 2025-08-10 (Current)
 
 ### Added
 
@@ -140,6 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Interface Consistency** - Standardized interfaces across all components
 - **Import Resolution** - Proper module imports and exports
 - **Compilation Errors** - Zero TypeScript errors in service layer
+- **Partner Access Context** - Fixed TypeScript type assignment in getPartnerAccessibleClients method
 
 ## [0.3.0] - 2025-08-06
 

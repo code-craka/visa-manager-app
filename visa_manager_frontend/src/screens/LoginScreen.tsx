@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, Modal, StyleSheet } from 'react-native';
 import { Button } from 'react-native-elements';
-import { SignIn } from '@clerk/clerk-react';
+import { SignIn, SignUp } from '@clerk/clerk-expo';
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../styles/theme';
 
 const LoginScreen = ({ navigation }: any) => {
-  const { signIn, showSignIn, setShowSignIn, setShowSignUp } = useAuth();
+  const { signIn, showSignIn, setShowSignIn, showSignUp, setShowSignUp } = useAuth();
 
   const handleSignIn = () => {
     signIn();
@@ -79,8 +79,31 @@ const LoginScreen = ({ navigation }: any) => {
           </View>
           <SignIn 
             routing="virtual"
-            signUpUrl="#"
-            afterSignInUrl="#"
+            afterSignInUrl="/"
+          />
+        </View>
+      </Modal>
+
+      {/* Clerk Sign Up Modal */}
+      <Modal
+        visible={showSignUp}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowSignUp(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Create Account</Text>
+            <Button
+              title="Close"
+              type="clear"
+              onPress={() => setShowSignUp(false)}
+              titleStyle={{ color: theme.colors.primary }}
+            />
+          </View>
+          <SignUp
+            routing="virtual"
+            afterSignUpUrl="/"
           />
         </View>
       </Modal>

@@ -3,6 +3,7 @@
 
 import {
   Client,
+  RestrictedClient,
   CreateClientRequest,
   UpdateClientRequest,
   ClientFilters,
@@ -140,6 +141,33 @@ class ApiService {
     return this.makeRequest<Partial<Client>[]>(endpoint);
   }
 
+  // Partner-specific client methods
+
+  // Get clients accessible to partner (restricted view)
+  async getPartnerAccessibleClients(): Promise<ApiResponse<RestrictedClient[]>> {
+    return this.makeRequest<RestrictedClient[]>('/clients/partner-accessible');
+  }
+
+  // Get specific client by ID for partner (restricted view)
+  async getPartnerClientById(id: number, taskId?: number): Promise<ApiResponse<RestrictedClient>> {
+    const queryParams = new URLSearchParams();
+    if (taskId) {
+      queryParams.append('taskId', taskId.toString());
+    }
+
+    const endpoint = `/clients/${id}/partner-view${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return this.makeRequest<RestrictedClient>(endpoint);
+  }
+
+  // Get client for task context (minimal data for partners)
+  async getClientForTaskContext(id: number, taskId: number): Promise<ApiResponse<Partial<RestrictedClient>>> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('taskId', taskId.toString());
+
+    const endpoint = `/clients/${id}/task-context?${queryParams.toString()}`;
+    return this.makeRequest<Partial<RestrictedClient>>(endpoint);
+  }
+
   // Dashboard-related methods
   async getDashboardStats(): Promise<DashboardStats> {
     // Mock implementation - replace with actual API call
@@ -223,7 +251,8 @@ export default new ApiService();
 
 // Re-export types for convenience
 export type { 
-  Client, 
+  Client,
+  RestrictedClient,
   CreateClientRequest, 
   UpdateClientRequest, 
   ClientFilters, 

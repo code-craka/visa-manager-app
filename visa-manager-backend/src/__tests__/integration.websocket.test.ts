@@ -44,8 +44,8 @@ describe('WebSocket Integration', () => {
       status: 'pending' as any,
       notes: 'Test notes',
       agencyId: 'test-agency-id',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       createdBy: 'test-user',
       updatedBy: 'test-user'
     };

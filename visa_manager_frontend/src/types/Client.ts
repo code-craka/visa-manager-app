@@ -108,5 +108,19 @@ export interface ValidationError {
   message: string;
 }
 
+// Restricted client interface for partners - only task-relevant information
+export interface RestrictedClient {
+  id: number;
+  name: string;
+  email: string; // Masked for partners
+  phone?: string; // Masked for partners
+  visaType: VisaType;
+  status: ClientStatus;
+  notes?: string; // Filtered for partners
+  createdAt: string; // ISO string from API
+  updatedAt: string; // ISO string from API
+  // Sensitive fields excluded: agencyId, createdBy, updatedBy
+}
+
 // Helper type for API responses
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;

@@ -20,7 +20,7 @@ The Visa Manager App is a comprehensive mobile and web application designed to s
 
 ## ✨ Latest Updates
 
-### 🚀 Version 0.3.1 (Current) - August 9, 2025
+### 🚀 Version 0.3.1 (Current) - August 10, 2025
 
 - **🌐 Complete Client Management API** - Full REST API with 7 endpoints and authentication
 - **🏗️ Client Service Layer** - Complete backend ClientService implementation with CRUD operations
@@ -307,7 +307,7 @@ visa-manager-app/
     │   └── styles/ (theme.ts)
     ├── App.tsx
     ├── package.json
-    ├── tsconfig.json
+    ├── config.json
     └── ...
 ```
 

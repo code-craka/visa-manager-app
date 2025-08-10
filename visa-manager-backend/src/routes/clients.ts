@@ -4,6 +4,7 @@
 import express, { Request, Response } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { ClientService } from '../services/ClientService';
+import { PartnerClientService, RestrictedClient, PartnerAccessContext } from '../services/PartnerClientService';
 import {
   ClientError,
   ClientValidationError
@@ -53,9 +54,11 @@ interface PaginationInfo {
 
 class ClientController {
   private clientService: ClientService;
+  private partnerClientService: PartnerClientService;
 
   constructor() {
     this.clientService = new ClientService();
+    this.partnerClientService = new PartnerClientService();
   }
 
   /**
@@ -106,6 +109,12 @@ class ClientController {
   async getAll(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
+      const userRole = req.user!.role;
+
+      // If user is a partner, redirect to partner-specific endpoint
+      if (userRole === 'partner') {
+        return this.getPartnerAccessibleClients(req, res);
+      }
 
       // Parse query parameters with proper typing
       const filters: ClientFilters = {
@@ -157,6 +166,7 @@ class ClientController {
     try {
       const clientId = parseInt(req.params.id!);
       const userId = req.user!.id;
+      const userRole = req.user!.role;
 
       if (isNaN(clientId)) {
         res.status(400).json({
@@ -165,6 +175,11 @@ class ClientController {
           errorCode: 'INVALID_ID'
         } as ApiErrorResponse);
         return;
+      }
+
+      // If user is a partner, use partner-specific access
+      if (userRole === 'partner') {
+        return this.getPartnerClientById(req, res);
       }
 
       const client = await this.clientService.getClientById(clientId, userId);
@@ -333,6 +348,161 @@ class ClientController {
       } as ApiErrorResponse);
     }
   }
+
+  /**
+   * Get clients accessible to partner (restricted view)
+   * GET /api/clients/partner-accessible
+   */
+  async getPartnerAccessibleClients(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const partnerId = req.user!.id;
+      const accessContext: PartnerAccessContext = {
+        partnerId,
+        accessType: 'list' as const
+      };
+      
+      if (req.ip) {
+        accessContext.ipAddress = req.ip;
+      }
+      
+      const userAgent = req.get('User-Agent');
+      if (userAgent) {
+        accessContext.userAgent = userAgent;
+      }
+
+      const clients = await this.partnerClientService.getPartnerAccessibleClients(partnerId, accessContext);
+
+      res.json({
+        success: true,
+        data: clients
+      } as ApiSuccessResponse<RestrictedClient[]>);
+    } catch (error: any) {
+      if (error instanceof ClientError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode
+        } as ApiErrorResponse);
+      } else {
+        console.error('Error retrieving partner accessible clients:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to retrieve accessible clients',
+          errorCode: 'RETRIEVAL_FAILED'
+        } as ApiErrorResponse);
+      }
+    }
+  }
+
+  /**
+   * Get specific client by ID for partner (restricted view)
+   * GET /api/clients/:id/partner-view
+   */
+  async getPartnerClientById(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const clientId = parseInt(req.params.id!);
+      const partnerId = req.user!.id;
+      const taskId = req.query.taskId ? parseInt(req.query.taskId as string) : undefined;
+
+      if (isNaN(clientId)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid client ID',
+          errorCode: 'INVALID_ID'
+        } as ApiErrorResponse);
+        return;
+      }
+
+      const accessContext: PartnerAccessContext = {
+        partnerId,
+        accessType: 'view' as const,
+        clientId
+      };
+      
+      if (taskId !== undefined) {
+        accessContext.taskId = taskId;
+      }
+      
+      if (req.ip) {
+        accessContext.ipAddress = req.ip;
+      }
+      
+      const userAgent = req.get('User-Agent');
+      if (userAgent) {
+        accessContext.userAgent = userAgent;
+      }
+
+      const client = await this.partnerClientService.getPartnerAccessibleClientById(
+        clientId,
+        partnerId,
+        taskId,
+        accessContext
+      );
+
+      res.json({
+        success: true,
+        data: client
+      } as ApiSuccessResponse<RestrictedClient>);
+    } catch (error: any) {
+      if (error instanceof ClientError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode
+        } as ApiErrorResponse);
+      } else {
+        console.error('Error retrieving partner client:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          errorCode: 'INTERNAL_ERROR'
+        } as ApiErrorResponse);
+      }
+    }
+  }
+
+  /**
+   * Get client for task context (minimal data for partners)
+   * GET /api/clients/:id/task-context
+   */
+  async getClientForTaskContext(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const clientId = parseInt(req.params.id!);
+      const partnerId = req.user!.id;
+      const taskId = parseInt(req.query.taskId as string);
+
+      if (isNaN(clientId) || isNaN(taskId)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid client ID or task ID',
+          errorCode: 'INVALID_ID'
+        } as ApiErrorResponse);
+        return;
+      }
+
+      const client = await this.partnerClientService.getClientForTaskContext(clientId, partnerId, taskId);
+
+      res.json({
+        success: true,
+        data: client
+      } as ApiSuccessResponse<Partial<RestrictedClient>>);
+    } catch (error: any) {
+      if (error instanceof ClientError) {
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+          errorCode: error.errorCode
+        } as ApiErrorResponse);
+      } else {
+        console.error('Error retrieving client for task context:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Internal server error',
+          errorCode: 'INTERNAL_ERROR'
+        } as ApiErrorResponse);
+      }
+    }
+  }
 }
 
 // Initialize router and controller
@@ -359,6 +529,15 @@ router.get('/for-assignment',
   }
 );
 
+// Partner accessible clients endpoint
+router.get('/partner-accessible',
+  requireAuth,
+  requireRole(['partner']),
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.getPartnerAccessibleClients(req, res);
+  }
+);
+
 // Create new client (agency only)
 router.post('/',
   requireAuth,
@@ -373,6 +552,24 @@ router.get('/',
   requireAuth,
   async (req: AuthenticatedRequest, res: Response) => {
     await clientController.getAll(req, res);
+  }
+);
+
+// Partner view of specific client
+router.get('/:id/partner-view',
+  requireAuth,
+  requireRole(['partner']),
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.getPartnerClientById(req, res);
+  }
+);
+
+// Client for task context (minimal data for partners)
+router.get('/:id/task-context',
+  requireAuth,
+  requireRole(['partner']),
+  async (req: AuthenticatedRequest, res: Response) => {
+    await clientController.getClientForTaskContext(req, res);
   }
 );
 

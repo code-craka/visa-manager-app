@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Alert, ScrollView, Modal, StyleSheet } from 'react-native';
 import { Button, ButtonGroup } from 'react-native-elements';
-import { SignUp } from '@clerk/clerk-react';
+import { SignUp } from '@clerk/clerk-expo';
 import { useAuth } from '../context/AuthContext';
 import { theme } from '../styles/theme';
 

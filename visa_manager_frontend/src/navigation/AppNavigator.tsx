@@ -12,11 +12,30 @@ import RegistrationScreen from '../screens/RegistrationScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ClientListScreen from '../screens/ClientListScreen';
 import ClientFormScreen from '../screens/ClientFormScreen';
+import PartnerClientListScreen from '../screens/PartnerClientListScreen';
+import PartnerClientDetailScreen from '../screens/PartnerClientDetailScreen';
 import TaskAssignmentScreen from '../screens/TaskAssignmentScreen';
 import CommissionReportScreen from '../screens/CommissionReportScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 
-const Stack = createStackNavigator();
+// Type definitions for navigation
+type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  PartnerClientList: undefined;
+  PartnerClientDetail: {
+    clientId: number;
+    clientName: string;
+    taskId?: number;
+  };
+  ClientList: undefined;
+  ClientForm: {
+    clientId?: number;
+    mode: 'create' | 'edit';
+  };
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 // Auth Stack for login/register flows
@@ -43,26 +62,47 @@ const AuthStack = () => (
 );
 
 // Client Stack for client-related screens
-const ClientStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: theme.colors.primary },
-      headerTintColor: '#fff',
-      headerTitleStyle: { fontWeight: 'bold' }
-    }}
-  >
-    <Stack.Screen
-      name="ClientList"
-      component={ClientListScreen}
-      options={{ title: 'Clients', headerShown: false }}
-    />
-    <Stack.Screen
-      name="ClientForm"
-      component={ClientFormScreen}
-      options={{ title: 'Client Form', headerShown: false }}
-    />
-  </Stack.Navigator>
-);
+const ClientStack = () => {
+  const { user } = useAuth();
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTintColor: '#fff',
+        headerTitleStyle: { fontWeight: 'bold' }
+      }}
+    >
+      {user?.role === 'partner' ? (
+        <>
+          <Stack.Screen
+            name="PartnerClientList"
+            component={PartnerClientListScreen}
+            options={{ title: 'Accessible Clients', headerShown: false }}
+          />
+          <Stack.Screen
+            name="PartnerClientDetail"
+            component={PartnerClientDetailScreen}
+            options={{ title: 'Client Details' }}
+          />
+        </>
+      ) : (
+        <>
+          <Stack.Screen
+            name="ClientList"
+            component={ClientListScreen}
+            options={{ title: 'Clients', headerShown: false }}
+          />
+          <Stack.Screen
+            name="ClientForm"
+            component={ClientFormScreen}
+            options={{ title: 'Client Form', headerShown: false }}
+          />
+        </>
+      )}
+    </Stack.Navigator>
+  );
+};
 
 // Main App Tabs for authenticated users
 const MainTabs = () => {

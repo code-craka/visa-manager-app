@@ -103,7 +103,7 @@ async function testDatabaseConnection() {
 
     // Test 6: Test basic CRUD operations (mock data)
     console.log('6. Testing basic CRUD operations...');
-    
+
     // Test INSERT with mock agency ID
     const mockAgencyId = 'test_agency_123';
     const insertResult = await pool.query(`
@@ -153,11 +153,11 @@ async function testDatabaseConnection() {
     // Test 7: Performance test
     console.log('7. Testing query performance...');
     const startTime = Date.now();
-    
+
     await pool.query(`
       SELECT COUNT(*) FROM clients WHERE agency_id = $1
     `, [mockAgencyId]);
-    
+
     const endTime = Date.now();
     console.log(`✅ Query performance: ${endTime - startTime}ms`);
     console.log('');
@@ -167,7 +167,7 @@ async function testDatabaseConnection() {
 
   } catch (error) {
     console.error('❌ Database test failed:', error);
-    
+
     if (error.code === '42P01') {
       console.log('\n💡 Solution: Run the migration script:');
       console.log('   Copy and paste visa-manager-backend/src/migrations/003_create_clients_table.sql');

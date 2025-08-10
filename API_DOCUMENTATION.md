@@ -41,7 +41,7 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "data": <response_data>,
+  "data": "<response_data>",
   "message": "Optional success message",
   "pagination": {
     "page": 1,
@@ -362,6 +362,81 @@ Retrieves a simplified list of clients for task assignment. Only accessible by a
       "status": "pending"
     }
   ]
+}
+```
+
+### Get Partner Accessible Clients (Partner Only)
+
+**GET** `/clients/partner-accessible`
+
+Retrieves clients accessible to a partner through their assigned tasks. Only accessible by partner users. Returns masked/restricted client data for privacy.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "jo***@example.com",
+      "phone": "***-***-7890",
+      "visaType": "tourist",
+      "status": "pending",
+      "notes": "Filtered notes for partner view",
+      "createdAt": "2025-08-09T10:00:00Z",
+      "updatedAt": "2025-08-09T10:00:00Z"
+    }
+  ]
+}
+```
+
+### Get Partner Client by ID (Partner Only)
+
+**GET** `/clients/:id/partner-view`
+
+Retrieves a specific client by ID with partner access validation. Only accessible by partner users. Returns masked/restricted client data.
+
+**Query Parameters:**
+- `taskId` (optional): Task ID for context validation
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "jo***@example.com",
+    "phone": "***-***-7890",
+    "visaType": "tourist",
+    "status": "pending",
+    "notes": "Filtered notes for partner view",
+    "createdAt": "2025-08-09T10:00:00Z",
+    "updatedAt": "2025-08-09T10:00:00Z"
+  }
+}
+```
+
+### Get Client for Task Context (Partner Only)
+
+**GET** `/clients/:id/task-context`
+
+Retrieves minimal client information for task context. Only accessible by partner users.
+
+**Query Parameters:**
+- `taskId` (required): Task ID for context validation
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "visaType": "tourist",
+    "status": "pending"
+  }
 }
 ```
 
@@ -789,7 +864,7 @@ WebSocket connections include automatic reconnection with exponential backoff:
 
 ## Changelog
 
-- **v0.3.1** - Complete client management API implementation with real-time WebSocket integration
+- **v0.3.1** - Complete client management API implementation with real-time WebSocket integration and TypeScript improvements
 - **v0.3.0** - JWT template integration and authentication overhaul
 - **v0.2.0** - Initial API structure and basic endpoints
 
