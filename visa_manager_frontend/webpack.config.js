@@ -1,6 +1,8 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+const webpack = require('webpack');
+require('dotenv').config({ path: '.env.web' });
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isAnalyze = process.env.ANALYZE === 'true';
@@ -97,6 +99,13 @@ module.exports = {
     ],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env.REACT_APP_PLATFORM': JSON.stringify(process.env.REACT_APP_PLATFORM || 'web'),
+      'process.env.REACT_APP_API_BASE_URL': JSON.stringify(process.env.REACT_APP_API_BASE_URL),
+      'process.env.REACT_APP_WS_URL': JSON.stringify(process.env.REACT_APP_WS_URL),
+      'process.env.REACT_APP_CLERK_PUBLISHABLE_KEY': JSON.stringify(process.env.REACT_APP_CLERK_PUBLISHABLE_KEY),
+      '__DEV__': JSON.stringify(!isProduction),
+    }),
     new HtmlWebpackPlugin({
       template: './public/index.html',
       inject: true,
