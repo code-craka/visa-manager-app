@@ -1,0 +1,137 @@
+name: Final Integration Testing
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  cross-platform-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./visa_manager_frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run integration tests
+        run: yarn test --testPathPattern=integration --coverage
+
+      - name: Start web application
+        run: |
+          yarn start:web &
+          sleep 30
+
+      - name: Run E2E tests
+        run: yarn test:e2e
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: |
+            visa_manager_frontend/coverage/
+            visa_manager_frontend/__tests__/results/
+
+  responsive-design-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./visa_manager_frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Start application
+        run: |
+          yarn start:web &
+          sleep 30
+
+      - name: Run responsive design tests
+        run: yarn test:e2e --testNamePattern="Responsive Design"
+
+  performance-validation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./visa_manager_frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build production
+        run: yarn build:web
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Validate performance metrics
+        run: |
+          node -e "
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('.lighthouseci/lhr-*.json'));
+            const performance = report.categories.performance.score;
+            const accessibility = report.categories.accessibility.score;
+            
+            console.log('Performance Score:', performance);
+            console.log('Accessibility Score:', accessibility);
+            
+            if (performance < 0.8) throw new Error('Performance score below threshold');
+            if (accessibility < 0.9) throw new Error('Accessibility score below threshold');
+          "
+
+  security-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run security audit
+        run: |
+          cd visa_manager_frontend
+          yarn audit --level moderate
+
+      - name: Validate security headers
+        run: |
+          cd visa_manager_frontend
+          yarn start:web &
+          sleep 30
+          
+          # Test CSP header
+          curl -I http://localhost:3000 | grep -i "content-security-policy"
+          
+          # Test XSS protection
+          curl -I http://localhost:3000 | grep -i "x-xss-protection"
