@@ -18,10 +18,7 @@ jest.mock('react-native-reanimated', () => ({
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'MaterialIcons');
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'MaterialCommunityIcons');
 
-// Mock AsyncStorage
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
-);
+// AsyncStorage mock removed - not used in this project
 
 // Mock NetInfo
 jest.mock('@react-native-community/netinfo', () => ({
@@ -48,13 +45,27 @@ jest.mock('@clerk/clerk-expo', () => ({
   ClerkProvider: ({ children }) => children,
 }));
 
-// Mock WebSocket
+// Mock WebSocket and WebSocketService
 global.WebSocket = jest.fn(() => ({
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
   send: jest.fn(),
   close: jest.fn(),
   readyState: 1,
+}));
+
+// Mock WebSocketService
+jest.mock('../src/services/WebSocketService', () => ({
+  __esModule: true,
+  default: {
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+    onClientCreated: jest.fn(),
+    onClientUpdated: jest.fn(),
+    onClientDeleted: jest.fn(),
+    onClientStats: jest.fn(),
+    isConnected: jest.fn(() => true),
+  },
 }));
 
 // Mock console methods to reduce noise in tests
@@ -64,11 +75,23 @@ global.console = {
   error: jest.fn(),
 };
 
-// Mock Dimensions
+// Mock Dimensions and PixelRatio
 jest.mock('react-native/Libraries/Utilities/Dimensions', () => ({
   get: jest.fn(() => ({ width: 375, height: 667 })),
   addEventListener: jest.fn(),
   removeEventListener: jest.fn(),
+}));
+
+jest.mock('react-native/Libraries/Utilities/PixelRatio', () => ({
+  get: jest.fn(() => 2),
+  getFontScale: jest.fn(() => 1),
+  getPixelSizeForLayoutSize: jest.fn((size) => size * 2),
+  roundToNearestPixel: jest.fn((size) => size),
+}));
+
+// Mock StyleSheet
+jest.mock('react-native/Libraries/StyleSheet/StyleSheetExports', () => ({
+  roundToNearestPixel: jest.fn((size) => size),
 }));
 
 // Mock Alert
@@ -91,8 +114,7 @@ jest.mock('react-native/Libraries/Utilities/Platform', () => ({
   select: jest.fn((obj) => obj.ios),
 }));
 
-// Silence the warning: Animated: `useNativeDriver` is not supported
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+// NativeAnimatedHelper mock removed - not available in this RN version
 
 // Mock timers
 jest.useFakeTimers();

@@ -1,7 +1,10 @@
 // Client Management REST API Routes
 // Following the established patterns from the copilot instructions
 
-import express, { Request, Response } from 'express';
+/// <reference path="../types.d.ts" />
+
+import * as express from 'express';
+import { Request, Response } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { ClientService } from '../services/ClientService';
 import { PartnerClientService, RestrictedClient, PartnerAccessContext } from '../services/PartnerClientService';
@@ -18,17 +21,8 @@ import {
   ClientStatus
 } from '../models/Client';
 
-// Extended Request interface for authenticated requests
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    displayName: string;
-    primaryEmail: string;
-    role: 'agency' | 'admin' | 'partner';
-    dbUserId?: number;
-  };
-}
+// Use the extended Express Request interface from express.d.ts
+type AuthenticatedRequest = Request;
 
 // Standard API response interfaces
 interface ApiSuccessResponse<T = any> {

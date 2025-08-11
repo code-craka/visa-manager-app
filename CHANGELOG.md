@@ -149,6 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Compilation Errors** - Zero TypeScript errors in service layer
 - **Partner Access Context** - Fixed TypeScript type assignment in getPartnerAccessibleClients method
 - **Boolean Type Coercion** - Fixed TypeScript boolean type coercion in EnhancedClientFormScreen validation
+- **Express Import Issues** - Fixed Express module import conflicts by renaming express.d.ts to types.d.ts and updating TypeScript configuration
 
 ## [0.3.0] - 2025-08-06
 

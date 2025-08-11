@@ -2,14 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
-import { initializeDatabase } from './db.js';
-import { webSocketService } from './services/WebSocketService.js';
-import authRoutes from './routes/auth.js';
-import clientRoutes from './routes/clients.js';
-import taskRoutes from './routes/tasks.js';
-import notificationRoutes from './routes/notifications.js';
-import dashboardRoutes from './routes/dashboard.js';
-import testRoutes from './routes/test.js';
+import { initializeDatabase } from './db';
+import { webSocketService } from './services/WebSocketService';
+import authRoutes from './routes/auth';
+import clientRoutes from './routes/clients';
+import taskRoutes from './routes/tasks';
+import notificationRoutes from './routes/notifications';
+import dashboardRoutes from './routes/dashboard';
+import testRoutes from './routes/test';
 
 dotenv.config();
 

@@ -178,3 +178,15 @@ jspm_packages/
 .github/copilot-instructions.md
 .amazonq
 .amazonq/rules
+/visa-manager-backend/.git/
+/visa-manager-backend/.github/
+/visa-manager-backend/.gitignore
+/visa-manager-backend/.gitattributes
+/visa-manager-backend/.gitmodules
+/visa-manager-backend/.gitignore
+/visa-manager-backend/node_modules/
+/visa-manager-backend/.idea/
+/visa-manager-backend/.vscode/
+/visa-manager-backend/.prettierignore
+/visa-manager-backend/.prettierignore
+/visa-manager-backend/.prettierignore

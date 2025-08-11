@@ -2,7 +2,7 @@
 // Testing client selection functionality, search, filtering, and integration
 
 import React from 'react';
-import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react-native'
 import { Provider as PaperProvider } from 'react-native-paper';
 import ClientSelectionModal from '../ClientSelectionModal';
 import ApiService from '../../services/ApiService';
