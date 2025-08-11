@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { Platform } from 'react-native';
 import { ClerkProvider, useAuth as useClerkAuth, useUser } from '@clerk/clerk-expo';
+import { SecurityUtils } from '../utils/SecurityUtils';
+import { CORSService } from '../services/CORSService';
 
 interface User {
   id: string;
@@ -20,6 +23,10 @@ interface AuthContextType {
   showSignUp: boolean;
   setShowSignIn: (show: boolean) => void;
   setShowSignUp: (show: boolean) => void;
+  // Security features
+  enableMFA: () => Promise<boolean>;
+  disableMFA: () => Promise<boolean>;
+  isMFAEnabled: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,6 +51,7 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [isMFAEnabled, setIsMFAEnabled] = useState(false);
 
   // Use static API URL for Android emulator
   const apiBaseUrl = 'http://10.0.2.2:3000/api';
@@ -63,11 +71,15 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
           if (jwtToken) {
             // Try to sync with backend
             try {
+              const headers = {
+                'Authorization': `Bearer ${jwtToken}`,
+                'Content-Type': 'application/json',
+                ...(Platform.OS === 'web' ? CORSService.getCORSHeaders() : {}),
+              };
+
               const response = await fetch(`${apiBaseUrl}/auth/profile`, {
-                headers: {
-                  'Authorization': `Bearer ${jwtToken}`,
-                  'Content-Type': 'application/json',
-                },
+                headers,
+                credentials: Platform.OS === 'web' ? 'include' : 'same-origin',
               });
 
               if (response.ok) {
@@ -186,9 +198,53 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
 
   const getAuthToken = async (): Promise<string | null> => {
     if (isSignedIn) {
-      return await getToken({ template: 'neon' });
+      const token = await getToken({ template: 'neon' });
+      if (token) {
+        // Store token securely
+        await SecurityUtils.storeSecureToken('auth_token', token);
+      }
+      return token;
     }
     return null;
+  };
+
+  const enableMFA = async (): Promise<boolean> => {
+    try {
+      if (clerkUser) {
+        // Enable MFA through Clerk
+        await clerkUser.update({
+          unsafeMetadata: { 
+            ...clerkUser.unsafeMetadata,
+            mfaEnabled: true 
+          }
+        });
+        setIsMFAEnabled(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to enable MFA:', error);
+      return false;
+    }
+  };
+
+  const disableMFA = async (): Promise<boolean> => {
+    try {
+      if (clerkUser) {
+        await clerkUser.update({
+          unsafeMetadata: { 
+            ...clerkUser.unsafeMetadata,
+            mfaEnabled: false 
+          }
+        });
+        setIsMFAEnabled(false);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to disable MFA:', error);
+      return false;
+    }
   };
 
   const value: AuthContextType = {
@@ -203,6 +259,9 @@ const AuthProviderInner: React.FC<AuthProviderProps> = ({ children }) => {
     showSignUp,
     setShowSignIn,
     setShowSignUp,
+    enableMFA,
+    disableMFA,
+    isMFAEnabled,
   };
 
   return (
