@@ -1,4 +1,5 @@
 import { Notification } from '../types/Common';
+import EnvironmentLoader from '../utils/EnvironmentLoader';
 
 export interface WebSocketMessage {
   type: 'notification' | 'task_update' | 'client_update' | 'stats_update';
@@ -61,10 +62,9 @@ class WebSocketService {
   private token: string | null = null;
 
   constructor() {
-    // Use 10.0.2.2 for Android emulator or your computer's IP for physical device
-    this.baseUrl = __DEV__ 
-      ? 'ws://10.0.2.2:3000' 
-      : 'wss://your-production-domain.com';
+    // Get platform-specific WebSocket URL from environment configuration
+    const config = EnvironmentLoader.getConfig();
+    this.baseUrl = config.WS_URL;
   }
 
   connect(authToken: string): Promise<void> {

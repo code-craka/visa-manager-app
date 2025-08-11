@@ -22,8 +22,7 @@ import {
 } from '../types/Common';
 
 import { clientCacheService } from './ClientCacheService';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+import EnvironmentLoader from '../utils/EnvironmentLoader';
 
 // Enhanced error types for better error handling
 export interface ApiError {
@@ -48,6 +47,7 @@ class ApiService {
   private defaultRetries = 3;
   private defaultRetryDelay = 1000; // 1 second
   private currentUserId: string | null = null;
+  private environmentConfig = EnvironmentLoader.getConfig();
 
   // Method to set the auth token getter from AuthContext
   setAuthTokenGetter(getter: () => Promise<string | null>) {
@@ -57,6 +57,30 @@ class ApiService {
   // Method to set current user ID for caching
   setCurrentUserId(userId: string) {
     this.currentUserId = userId;
+  }
+
+  // Get platform-specific API base URL
+  private getApiBaseUrl(): string {
+    return this.environmentConfig.API_BASE_URL;
+  }
+
+  // Get platform-specific request headers
+  private getPlatformHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add platform-specific headers
+    if (EnvironmentLoader.isWeb()) {
+      headers['X-Platform'] = 'web';
+      headers['X-Client-Version'] = '0.3.2';
+    } else if (EnvironmentLoader.isAndroid()) {
+      headers['X-Platform'] = 'android';
+      headers['X-Client-Version'] = '0.3.2';
+      headers['X-Device-Type'] = 'mobile';
+    }
+
+    return headers;
   }
 
   private async getToken(): Promise<string> {
@@ -182,10 +206,10 @@ class ApiService {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        const response = await fetch(`${this.getApiBaseUrl()}${endpoint}`, {
           ...options,
           headers: {
-            'Content-Type': 'application/json',
+            ...this.getPlatformHeaders(),
             'Authorization': `Bearer ${token}`,
             ...options.headers,
           },
