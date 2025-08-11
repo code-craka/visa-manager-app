@@ -3,7 +3,7 @@ import React from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { AuthProvider } from './src/context/AuthContext';
 import { RealtimeProvider } from './src/context/RealtimeContext';
-import AppNavigator from './src/navigation/AppNavigator';
+import PlatformNavigator from './src/navigation/PlatformNavigator';
 import { theme } from './src/styles/theme';
 
 const App = () => {
@@ -16,7 +16,7 @@ const App = () => {
     }}>
       <AuthProvider>
         <RealtimeProvider>
-          <AppNavigator />
+          <PlatformNavigator />
         </RealtimeProvider>
       </AuthProvider>
     </PaperProvider>
