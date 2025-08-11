@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "build": "webpack --mode production",
+    "build:web": "webpack --mode production --config webpack.config.js",
+    "start:web": "webpack serve --mode development --config webpack.config.js",
+    "preview": "webpack serve --mode production --config webpack.config.js"
+  }
+}

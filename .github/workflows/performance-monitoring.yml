@@ -1,0 +1,57 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * *' # Daily at midnight
+
+jobs:
+  lighthouse-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Run Lighthouse CI
+        run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_SERVER_BASE_URL: ${{ secrets.LHCI_SERVER_BASE_URL }}
+          LHCI_SERVER_TOKEN: ${{ secrets.LHCI_SERVER_TOKEN }}
+
+  bundle-analysis:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./visa_manager_frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build and analyze bundle
+        run: |
+          yarn build:web
+          npx webpack-bundle-analyzer web-build/static/js/*.js --report --mode static --report-filename bundle-report.html
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: visa_manager_frontend/bundle-report.html

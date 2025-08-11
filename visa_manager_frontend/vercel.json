@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "name": "visa-manager-web",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "web-build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://clerk.techsci.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.visamanager.com wss://ws.visamanager.com https://clerk.techsci.io; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "REACT_APP_PLATFORM": "web",
+    "REACT_APP_CLERK_PUBLISHABLE_KEY": "@clerk_publishable_key",
+    "REACT_APP_API_BASE_URL": "@api_base_url",
+    "REACT_APP_WS_URL": "@ws_url"
+  },
+  "build": {
+    "env": {
+      "REACT_APP_PLATFORM": "web"
+    }
+  }
+}

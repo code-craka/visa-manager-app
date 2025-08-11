@@ -1,0 +1,73 @@
+name: Web Deployment
+
+on:
+  push:
+    branches: [main, feat/upgrade-react-native3]
+    paths: ['visa_manager_frontend/**']
+  pull_request:
+    branches: [main]
+    paths: ['visa_manager_frontend/**']
+
+jobs:
+  web-build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./visa_manager_frontend
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          cache-dependency-path: visa_manager_frontend/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn test --watchAll=false --coverage
+
+      - name: Build web
+        run: yarn build:web
+        env:
+          REACT_APP_PLATFORM: web
+          REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          REACT_APP_API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          REACT_APP_WS_URL: ${{ secrets.WS_URL }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: visa_manager_frontend/web-build/
+
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    needs: web-build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./visa_manager_frontend
+
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    needs: web-build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./visa_manager_frontend
