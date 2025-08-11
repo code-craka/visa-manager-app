@@ -1,13 +1,27 @@
 import React, { lazy, Suspense } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Platform } from 'react-native';
 import { theme } from '../../styles/theme';
 
-// Lazy load large components
-export const LazyClientListScreen = lazy(() => import('../../screens/ClientListScreen'));
-export const LazyClientFormScreen = lazy(() => import('../../screens/ClientFormScreen'));
-export const LazyTaskAssignmentScreen = lazy(() => import('../../screens/TaskAssignmentScreen'));
-export const LazyCommissionReportScreen = lazy(() => import('../../screens/CommissionReportScreen'));
-export const LazyNotificationScreen = lazy(() => import('../../screens/NotificationScreen'));
+// Lazy load large components (web only)
+export const LazyClientListScreen = Platform.OS === 'web' 
+  ? lazy(() => import('../../screens/ClientListScreen'))
+  : require('../../screens/ClientListScreen').default;
+
+export const LazyClientFormScreen = Platform.OS === 'web'
+  ? lazy(() => import('../../screens/ClientFormScreen'))
+  : require('../../screens/ClientFormScreen').default;
+
+export const LazyTaskAssignmentScreen = Platform.OS === 'web'
+  ? lazy(() => import('../../screens/TaskAssignmentScreen'))
+  : require('../../screens/TaskAssignmentScreen').default;
+
+export const LazyCommissionReportScreen = Platform.OS === 'web'
+  ? lazy(() => import('../../screens/CommissionReportScreen'))
+  : require('../../screens/CommissionReportScreen').default;
+
+export const LazyNotificationScreen = Platform.OS === 'web'
+  ? lazy(() => import('../../screens/NotificationScreen'))
+  : require('../../screens/NotificationScreen').default;
 
 // Loading component
 const LoadingFallback = () => (
@@ -21,13 +35,21 @@ const LoadingFallback = () => (
   </View>
 );
 
-// HOC for lazy loading with suspense
+// HOC for lazy loading with suspense (web only)
 export const withLazyLoading = <P extends object>(
-  Component: React.ComponentType<P>
+  Component: React.ComponentType<P> | React.LazyExoticComponent<React.ComponentType<P>>
 ) => {
-  return (props: P) => (
-    <Suspense fallback={<LoadingFallback />}>
-      <Component {...props} />
-    </Suspense>
-  );
+  return (props: P) => {
+    if (Platform.OS === 'web' && 'render' in Component) {
+      // Lazy component
+      return (
+        <Suspense fallback={<LoadingFallback />}>
+          <Component {...props} />
+        </Suspense>
+      );
+    }
+    // Regular component
+    const RegularComponent = Component as React.ComponentType<P>;
+    return <RegularComponent {...props} />;
+  };
 };
