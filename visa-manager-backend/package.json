@@ -6,6 +6,12 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:web": "PLATFORM=web node dist/index.js",
+    "start:android": "PLATFORM=android node dist/index.js",
+    "start:production": "NODE_ENV=production node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "dev:web": "tsc && PLATFORM=web node dist/index.js",
+    "dev:android": "tsc && PLATFORM=android node dist/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
