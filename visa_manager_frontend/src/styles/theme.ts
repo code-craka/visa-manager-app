@@ -25,7 +25,12 @@ export const theme = {
     onSecondary: '#ffffff',
     outline: '#79747e',
     outlineVariant: '#cac4cf',
-    text: '#1c1b1f', // Added missing text color
+    text: '#1c1b1f',
+    // Web-specific colors
+    focus: '#8D05D4',
+    hover: '#7A04B8',
+    disabled: '#E0E0E0',
+    backdrop: 'rgba(0, 0, 0, 0.5)',
   },
   fontSizes: {
     small: 12,
@@ -62,6 +67,33 @@ export const theme = {
     level3: 6,
     level4: 8,
     level5: 12,
+  },
+  // Web-specific styles
+  web: {
+    transitions: {
+      fast: '0.15s ease',
+      normal: '0.2s ease',
+      slow: '0.3s ease',
+    },
+    shadows: {
+      small: '0 1px 3px rgba(0,0,0,0.12)',
+      medium: '0 4px 6px rgba(0,0,0,0.1)',
+      large: '0 10px 25px rgba(0,0,0,0.15)',
+    },
+    focus: {
+      outline: '2px solid #8D05D4',
+      outlineOffset: '2px',
+    },
+  },
+  // Accessibility
+  accessibility: {
+    minTouchTarget: 44,
+    focusRingWidth: 2,
+    highContrast: {
+      primary: '#6A0DAD',
+      background: '#FFFFFF',
+      text: '#000000',
+    },
   },
 };
 
