@@ -8,11 +8,14 @@ import { theme } from '../styles/theme';
 import LoginScreen from '../screens/LoginScreen';
 import RegistrationScreen from '../screens/RegistrationScreen';
 import DashboardScreen from '../screens/DashboardScreen';
-import ClientListScreen from '../screens/ClientListScreen';
-import ClientFormScreen from '../screens/ClientFormScreen';
-import TaskAssignmentScreen from '../screens/TaskAssignmentScreen';
-import CommissionReportScreen from '../screens/CommissionReportScreen';
-import NotificationScreen from '../screens/NotificationScreen';
+import {
+  LazyClientListScreen,
+  LazyClientFormScreen,
+  LazyTaskAssignmentScreen,
+  LazyCommissionReportScreen,
+  LazyNotificationScreen,
+  withLazyLoading
+} from '../components/lazy/LazyComponents';
 
 // Web Layout Component
 const WebLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -95,7 +98,7 @@ const WebNavigator = () => {
           path="/clients" 
           element={
             <ProtectedRoute>
-              <ClientListScreen />
+              {withLazyLoading(LazyClientListScreen)({})}
             </ProtectedRoute>
           } 
         />
@@ -103,7 +106,7 @@ const WebNavigator = () => {
           path="/clients/new" 
           element={
             <ProtectedRoute>
-              <ClientFormScreen />
+              {withLazyLoading(LazyClientFormScreen)({})}
             </ProtectedRoute>
           } 
         />
@@ -111,7 +114,7 @@ const WebNavigator = () => {
           path="/clients/:id/edit" 
           element={
             <ProtectedRoute>
-              <ClientFormScreen />
+              {withLazyLoading(LazyClientFormScreen)({})}
             </ProtectedRoute>
           } 
         />
@@ -119,7 +122,7 @@ const WebNavigator = () => {
           path="/tasks" 
           element={
             <ProtectedRoute>
-              <TaskAssignmentScreen />
+              {withLazyLoading(LazyTaskAssignmentScreen)({})}
             </ProtectedRoute>
           } 
         />
@@ -127,7 +130,7 @@ const WebNavigator = () => {
           path="/commission" 
           element={
             <ProtectedRoute>
-              <CommissionReportScreen />
+              {withLazyLoading(LazyCommissionReportScreen)({})}
             </ProtectedRoute>
           } 
         />
@@ -135,7 +138,7 @@ const WebNavigator = () => {
           path="/notifications" 
           element={
             <ProtectedRoute>
-              <NotificationScreen />
+              {withLazyLoading(LazyNotificationScreen)({})}
             </ProtectedRoute>
           } 
         />
