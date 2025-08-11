@@ -4,6 +4,8 @@
 
 The Visa Manager App provides a comprehensive RESTful API built with Node.js, Express, and TypeScript. All endpoints use JWT authentication with Clerk integration and follow REST conventions with proper HTTP status codes.
 
+**Version:** 0.3.2 - Enhanced with comprehensive Task Management Model
+
 ## Base URL
 
 ```
@@ -460,41 +462,268 @@ Retrieves minimal client information for task context. Only accessible by partne
 }
 ```
 
-## Task Management Endpoints
+## Task Management Endpoints (Enhanced v0.3.2)
+
+### Task Model Overview
+
+The Task Management system supports comprehensive task tracking with:
+- **4-Level Priority System**: urgent, high, medium, low
+- **5-State Status Workflow**: pending, assigned, in_progress, completed, cancelled
+- **8 Specialized Task Types**: fingerprint, medical_exam, document_review, interview, translation, notarization, background_check, photo_service
+- **Dual Commission System**: Fixed amounts and percentage-based commissions
+- **Payment Status Tracking**: unpaid, pending, paid
 
 ### Create Task (Agency Only)
 
 **POST** `/tasks`
 
-Creates a new task.
+Creates a new task with comprehensive tracking capabilities.
 
 **Request Body:**
 ```json
 {
+  "title": "Client Fingerprinting Appointment",
+  "description": "Schedule and complete fingerprinting for visa application",
   "client_id": 1,
-  "assigned_to": 2,
-  "task_type": "fingerprint|medical|document_review|interview_prep|other",
-  "description": "Task description",
-  "commission": 100.00,
-  "due_date": "2025-08-15T10:00:00Z"
+  "assigned_to": "clerk_user_id_partner",
+  "priority": "high",
+  "task_type": "fingerprint",
+  "commission_amount": 150.00,
+  "commission_percentage": 10.5,
+  "due_date": "2025-08-15T10:00:00Z",
+  "notes": "Client prefers morning appointments"
 }
 ```
 
-### Get All Tasks
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Client Fingerprinting Appointment",
+    "description": "Schedule and complete fingerprinting for visa application",
+    "client_id": 1,
+    "assigned_to": "clerk_user_id_partner",
+    "created_by": "clerk_user_id_agency",
+    "priority": "high",
+    "status": "pending",
+    "task_type": "fingerprint",
+    "commission_amount": 150.00,
+    "commission_percentage": 10.5,
+    "payment_status": "unpaid",
+    "due_date": "2025-08-15T10:00:00Z",
+    "assigned_date": null,
+    "completed_date": null,
+    "notes": "Client prefers morning appointments",
+    "created_at": "2025-08-11T09:00:00Z",
+    "updated_at": "2025-08-11T09:00:00Z"
+  },
+  "message": "Task created successfully"
+}
+```
+
+### Get All Tasks with Advanced Filtering
 
 **GET** `/tasks`
 
-Retrieves all tasks for the current user.
+Retrieves tasks with comprehensive filtering, sorting, and pagination.
 
-### Get Task by ID
+**Query Parameters:**
+```
+?client_id=1
+&assigned_to=clerk_user_id
+&created_by=clerk_user_id
+&priority=urgent|high|medium|low
+&status=pending|assigned|in_progress|completed|cancelled
+&task_type=fingerprint|medical_exam|document_review|interview|translation|notarization|background_check|photo_service
+&payment_status=unpaid|pending|paid
+&due_date_from=2025-08-01
+&due_date_to=2025-08-31
+&search=fingerprint
+&page=1
+&limit=20
+&sort_by=created_at|updated_at|due_date|priority|status|title
+&sort_order=asc|desc
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Client Fingerprinting Appointment",
+        "client": {
+          "id": 1,
+          "name": "John Doe",
+          "email": "john@example.com",
+          "visa_type": "business",
+          "status": "pending"
+        },
+        "assigned_user": {
+          "clerk_user_id": "clerk_user_id_partner",
+          "name": "Partner Name",
+          "email": "partner@example.com",
+          "role": "partner"
+        },
+        "priority": "high",
+        "status": "assigned",
+        "task_type": "fingerprint",
+        "commission_amount": 150.00,
+        "payment_status": "unpaid",
+        "due_date": "2025-08-15T10:00:00Z"
+      }
+    ],
+    "pagination": {
+      "current_page": 1,
+      "total_pages": 5,
+      "total_count": 87,
+      "limit": 20,
+      "has_next": true,
+      "has_previous": false
+    },
+    "statistics": {
+      "total_tasks": 87,
+      "pending_tasks": 12,
+      "assigned_tasks": 25,
+      "in_progress_tasks": 18,
+      "completed_tasks": 30,
+      "cancelled_tasks": 2,
+      "urgent_tasks": 5,
+      "high_priority_tasks": 15,
+      "overdue_tasks": 3,
+      "total_commission_earned": 12500.00,
+      "total_commission_pending": 3750.00,
+      "completion_rate": 85.5,
+      "average_completion_time": 4.2
+    }
+  }
+}
+```
+
+### Get Task by ID with Details
 
 **GET** `/tasks/:id`
 
-Retrieves a specific task by ID.
+Retrieves a specific task with complete client and user relationship data.
 
-### Update Task
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Client Fingerprinting Appointment",
+    "description": "Schedule and complete fingerprinting for visa application",
+    "client": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "visa_type": "business",
+      "status": "pending"
+    },
+    "assigned_user": {
+      "clerk_user_id": "clerk_user_id_partner",
+      "name": "Partner Name",
+      "email": "partner@example.com",
+      "role": "partner"
+    },
+    "created_user": {
+      "clerk_user_id": "clerk_user_id_agency",
+      "name": "Agency Name",
+      "email": "agency@example.com",
+      "role": "agency"
+    },
+    "priority": "high",
+    "status": "in_progress",
+    "task_type": "fingerprint",
+    "commission_amount": 150.00,
+    "commission_percentage": 10.5,
+    "payment_status": "pending",
+    "due_date": "2025-08-15T10:00:00Z",
+    "assigned_date": "2025-08-11T10:00:00Z",
+    "completed_date": null,
+    "notes": "Client prefers morning appointments",
+    "created_at": "2025-08-11T09:00:00Z",
+    "updated_at": "2025-08-11T11:30:00Z"
+  }
+}
+```
+
+### Update Task with Status and Payment Tracking
 
 **PUT** `/tasks/:id`
+
+Updates task with comprehensive status and payment tracking.
+
+**Request Body:**
+```json
+{
+  "status": "completed",
+  "payment_status": "paid",
+  "completed_date": "2025-08-14T14:30:00Z",
+  "notes": "Fingerprinting completed successfully. Client was cooperative."
+}
+```
+
+### Assign Task to Partner
+
+**POST** `/tasks/:id/assign`
+
+Assigns a task to a partner with optional notes.
+
+**Request Body:**
+```json
+{
+  "assigned_to": "clerk_user_id_partner",
+  "notes": "Partner has experience with this client type"
+}
+```
+
+### Get Task Statistics (Ready for Implementation)
+
+**GET** `/tasks/stats`
+
+Retrieves comprehensive task statistics for dashboard.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "total_tasks": 87,
+    "pending_tasks": 12,
+    "assigned_tasks": 25,
+    "in_progress_tasks": 18,
+    "completed_tasks": 30,
+    "cancelled_tasks": 2,
+    "urgent_tasks": 5,
+    "high_priority_tasks": 15,
+    "overdue_tasks": 3,
+    "total_commission_earned": 12500.00,
+    "total_commission_pending": 3750.00,
+    "completion_rate": 85.5,
+    "average_completion_time": 4.2
+  }
+}
+```
+
+### Get Overdue Tasks (Ready for Implementation)
+
+**GET** `/tasks/overdue`
+
+Retrieves overdue tasks with priority filtering.
+
+**Query Parameters:**
+```
+?priority=urgent|high|medium|low
+&assigned_to=clerk_user_id
+&page=1
+&limit=20
+```
 
 Updates a task. Partners can update status, agencies can update everything.
 

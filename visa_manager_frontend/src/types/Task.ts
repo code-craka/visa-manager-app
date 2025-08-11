@@ -1,9 +1,9 @@
 /**
- * Task Model - TypeScript interfaces and types for task management
+ * Task Types - Frontend TypeScript interfaces matching backend Task model
  * Version: 0.3.2
  * 
- * Comprehensive task management with priority levels, commission tracking,
- * and status management following the established patterns from ClientService
+ * Comprehensive task management types for React Native frontend
+ * Matches visa-manager-backend/src/models/Task.ts
  */
 
 export type TaskPriority = 'urgent' | 'high' | 'medium' | 'low';
@@ -20,7 +20,7 @@ export type TaskType =
   | 'photo_service';
 
 /**
- * Core Task interface representing a task in the database
+ * Core Task interface representing a task from the API
  */
 export interface Task {
   id: number;
@@ -35,16 +35,16 @@ export interface Task {
   commission_amount: number;
   commission_percentage: number;
   payment_status: PaymentStatus;
-  due_date?: Date;
-  assigned_date?: Date;
-  completed_date?: Date;
+  due_date?: string; // ISO string
+  assigned_date?: string; // ISO string
+  completed_date?: string; // ISO string
   notes?: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string; // ISO string
+  updated_at: string; // ISO string
 }
 
 /**
- * Task creation interface - required fields for creating a new task
+ * Task creation interface for API requests
  */
 export interface CreateTaskRequest {
   title: string;
@@ -60,7 +60,7 @@ export interface CreateTaskRequest {
 }
 
 /**
- * Task update interface - fields that can be updated
+ * Task update interface for API requests
  */
 export interface UpdateTaskRequest {
   title?: string;
@@ -77,7 +77,7 @@ export interface UpdateTaskRequest {
 }
 
 /**
- * Task assignment interface - for assigning tasks to partners
+ * Task assignment interface for API requests
  */
 export interface AssignTaskRequest {
   assigned_to: string; // Clerk user ID of partner
@@ -85,7 +85,7 @@ export interface AssignTaskRequest {
 }
 
 /**
- * Task with related data - includes client and user information
+ * Task with related data from API responses
  */
 export interface TaskWithDetails extends Task {
   client?: {
@@ -100,7 +100,7 @@ export interface TaskWithDetails extends Task {
     name: string;
     email: string;
     role: string;
-  } | undefined;
+  };
   created_user?: {
     clerk_user_id: string;
     name: string;
@@ -129,7 +129,7 @@ export interface TaskStatistics {
 }
 
 /**
- * Task filter options for querying
+ * Task filter options for API queries
  */
 export interface TaskFilters {
   client_id?: number;
@@ -157,7 +157,7 @@ export interface TaskPaginationOptions {
 }
 
 /**
- * Task query response with pagination
+ * Task query response with pagination from API
  */
 export interface TaskQueryResponse {
   tasks: TaskWithDetails[];
@@ -173,7 +173,18 @@ export interface TaskQueryResponse {
 }
 
 /**
- * Task priority configuration with display properties
+ * API Response wrapper for task operations
+ */
+export interface TaskApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  errorCode?: string;
+  message?: string;
+}
+
+/**
+ * Task priority configuration with display properties for React Native
  */
 export const TASK_PRIORITY_CONFIG = {
   urgent: {
@@ -203,7 +214,7 @@ export const TASK_PRIORITY_CONFIG = {
 } as const;
 
 /**
- * Task status configuration with display properties
+ * Task status configuration with display properties for React Native
  */
 export const TASK_STATUS_CONFIG = {
   pending: {
@@ -234,7 +245,7 @@ export const TASK_STATUS_CONFIG = {
 } as const;
 
 /**
- * Task type configuration with display properties
+ * Task type configuration with display properties for React Native
  */
 export const TASK_TYPE_CONFIG = {
   fingerprint: {
@@ -280,7 +291,7 @@ export const TASK_TYPE_CONFIG = {
 } as const;
 
 /**
- * Payment status configuration
+ * Payment status configuration for React Native
  */
 export const PAYMENT_STATUS_CONFIG = {
   unpaid: {
@@ -299,3 +310,76 @@ export const PAYMENT_STATUS_CONFIG = {
     icon: 'check-circle'
   }
 } as const;
+
+/**
+ * Helper function to get priority weight for sorting
+ */
+export const getPriorityWeight = (priority: TaskPriority): number => {
+  return TASK_PRIORITY_CONFIG[priority].weight;
+};
+
+/**
+ * Helper function to get priority color
+ */
+export const getPriorityColor = (priority: TaskPriority): string => {
+  return TASK_PRIORITY_CONFIG[priority].color;
+};
+
+/**
+ * Helper function to get status color
+ */
+export const getStatusColor = (status: TaskStatus): string => {
+  return TASK_STATUS_CONFIG[status].color;
+};
+
+/**
+ * Helper function to get task type color
+ */
+export const getTaskTypeColor = (taskType: TaskType): string => {
+  return TASK_TYPE_CONFIG[taskType].color;
+};
+
+/**
+ * Helper function to get payment status color
+ */
+export const getPaymentStatusColor = (paymentStatus: PaymentStatus): string => {
+  return PAYMENT_STATUS_CONFIG[paymentStatus].color;
+};
+
+/**
+ * Helper function to check if task is overdue
+ */
+export const isTaskOverdue = (task: Task): boolean => {
+  if (!task.due_date) return false;
+  const dueDate = new Date(task.due_date);
+  const now = new Date();
+  return dueDate < now && task.status !== 'completed' && task.status !== 'cancelled';
+};
+
+/**
+ * Helper function to calculate days until due
+ */
+export const getDaysUntilDue = (task: Task): number | null => {
+  if (!task.due_date) return null;
+  const dueDate = new Date(task.due_date);
+  const now = new Date();
+  const diffTime = dueDate.getTime() - now.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+/**
+ * Helper function to format commission display
+ */
+export const formatCommission = (task: Task): string => {
+  const parts: string[] = [];
+  
+  if (task.commission_amount > 0) {
+    parts.push(`$${task.commission_amount.toFixed(2)}`);
+  }
+  
+  if (task.commission_percentage > 0) {
+    parts.push(`${task.commission_percentage}%`);
+  }
+  
+  return parts.join(' + ') || 'No commission';
+};

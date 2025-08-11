@@ -37,6 +37,7 @@ export interface DashboardStats {
   };
 }
 
+// Legacy Task interface - use Task types from ./Task.ts for new implementations
 export interface Task {
   id: number;
   clientId: number;
@@ -56,6 +57,24 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
 }
+
+// Re-export comprehensive Task types from Task.ts
+export type {
+  Task as TaskV2,
+  TaskPriority,
+  TaskStatus,
+  PaymentStatus,
+  TaskType,
+  CreateTaskRequest,
+  UpdateTaskRequest,
+  AssignTaskRequest,
+  TaskWithDetails,
+  TaskStatistics,
+  TaskFilters,
+  TaskPaginationOptions,
+  TaskQueryResponse,
+  TaskApiResponse
+} from './Task';
 
 export interface User {
   id: string;

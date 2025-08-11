@@ -45,7 +45,7 @@ export class ClientService {
 
       const result = await pool.query(query, params);
       const count = parseInt(result.rows[0].count);
-      
+
       return count === 0;
     } catch (error) {
       console.error('Error checking email uniqueness:', error);
@@ -96,7 +96,7 @@ export class ClientService {
       // Emit WebSocket notification for client creation
       try {
         webSocketService.notifyClientCreated(newClient);
-        
+
         // Also update client statistics
         const stats = await this.getClientStats(userId);
         webSocketService.notifyClientStats(stats, userId);
@@ -163,7 +163,7 @@ export class ClientService {
 
       // Build query with sorting
       const sortColumn = sortBy === 'date' ? 'created_at' :
-                        sortBy === 'visaType' ? 'visa_type' : sortBy;
+        sortBy === 'visaType' ? 'visa_type' : sortBy;
       const orderClause = `ORDER BY ${sortColumn} ${sortOrder.toUpperCase()}`;
 
       const query = `
@@ -315,7 +315,7 @@ export class ClientService {
       // Emit WebSocket notification for client update
       try {
         webSocketService.notifyClientUpdated(updatedClient, validatedData);
-        
+
         // Also update client statistics if status changed
         if (validatedData.status) {
           const stats = await this.getClientStats(userId);
@@ -392,7 +392,7 @@ export class ClientService {
       // Emit WebSocket notification for client deletion
       try {
         webSocketService.notifyClientDeleted(id, clientToDelete.name, userId);
-        
+
         // Also update client statistics
         const stats = await this.getClientStats(userId);
         webSocketService.notifyClientStats(stats, userId);

@@ -1,6 +1,6 @@
 {
   "name": "visa-manager-app",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Comprehensive visa management application with client management, task assignment, and real-time updates",
   "private": true,
   "workspaces": [

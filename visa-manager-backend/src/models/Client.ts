@@ -22,10 +22,7 @@ export enum ClientStatus {
 
 // Main Client interface matching database schema
 export interface Client {
-  id:number
-}
-
-;
+  id: number;
   name: string;
   email: string;
   phone?: string | undefined;
