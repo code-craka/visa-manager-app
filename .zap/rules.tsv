@@ -1,0 +1,11 @@
+# ZAP Scanning Rules
+# Format: ID	THRESHOLD	[NOTES]
+10003	IGNORE	# Ignore Vulnerable JS Library (false positives)
+10015	IGNORE	# Ignore Incomplete or No Cache-control Header Set
+10021	IGNORE	# Ignore X-Content-Type-Options Header Missing
+10023	IGNORE	# Ignore Information Disclosure - Debug Error Messages
+10027	IGNORE	# Ignore Information Disclosure - Suspicious Comments
+10054	IGNORE	# Ignore Cookie Without SameSite Attribute
+10096	IGNORE	# Ignore Timestamp Disclosure - Unix
+10109	IGNORE	# Ignore Modern Web Application
+90022	IGNORE	# Ignore Application Error Disclosure
