@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.1] - 2025-08-10 (Current)
 
+### Changed
+
+#### Dependency Optimization for Android Build Stability
+- **react-native-reanimated** - Downgraded from v4.0.2 to v3.15.4 for better React Native 0.80.2 compatibility
+- **Android Build Configuration** - Optimized dependency versions to resolve build conflicts
+- **Animation Library Compatibility** - Ensured stable animations with React Native Paper components
+
+### Fixed
+
+#### TypeScript Configuration Issues
+- **Frontend tsconfig.json** - Identified configuration issues with React Native 0.80.2 compatibility
+- **Module Resolution** - Bundler option requires ES2015+ module setting
+- **TypeScript Config Extension** - @react-native/typescript-config reference needs resolution
+
 ### Added
 
 #### Complete Client Management System Implementation

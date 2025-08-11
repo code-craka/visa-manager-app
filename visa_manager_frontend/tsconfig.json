@@ -5,6 +5,7 @@
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "jsx": "react-jsx",
     "paths": {
       "@components/*": ["components/*"],
       "@context/*": ["context/*"],

@@ -2,13 +2,13 @@
 
 buildscript {
     ext {
-        // Updated versions to fix compatibility issues
+        // Updated versions for React Native 0.76.1 compatibility
         buildToolsVersion = "35.0.0"
         minSdkVersion = 24
         compileSdkVersion = 35
-        targetSdkVersion = 34
-        kotlinVersion = "1.9.0" // Recommended version for modern React Native projects
-        ndkVersion = "25.2.9519653" // Updated NDK version to fix hermes tooling error
+        targetSdkVersion = 35
+        kotlinVersion = "2.0.21" // Compatible version for React Native 0.76.1
+        ndkVersion = "27.0.12077973" // Updated NDK version for React Native 0.76.1
     }
     repositories {
         google()
@@ -16,9 +16,9 @@ buildscript {
     }
     dependencies {
         // The Android Gradle plugin and its version
-        classpath("com.android.tools.build:gradle:7.4.2")
+        classpath("com.android.tools.build:gradle:8.7.2")
         // The React Native Gradle plugin
-        classpath("com.facebook.react:react-native-gradle-plugin:0.80.2")
+        classpath("com.facebook.react:react-native-gradle-plugin:0.76.1")
         // The Kotlin Gradle plugin
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
     }

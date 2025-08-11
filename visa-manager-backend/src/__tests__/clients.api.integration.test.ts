@@ -1,5 +1,6 @@
-import request from 'supertest';
 import express from 'express';
+import request from 'supertest';
+import { Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
 import clientRoutes from '../routes/clients';
 import { requireAuth } from '../middleware/auth';
@@ -24,7 +25,7 @@ jest.mock('../middleware/auth', () => ({
     };
     next();
   }),
-  requireRole: jest.fn(() => (req, res, next) => next()),
+  requireRole: jest.fn(() => (req: Request, res: Response, next: NextFunction) => next()),
 }));
 
 const app = express();
