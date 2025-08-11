@@ -3,6 +3,9 @@ import { webSocketService, NotificationUpdate, TaskUpdate, StatsUpdate, ClientSt
 import { useAuth } from './AuthContext';
 import { Notification, DashboardStats } from '../services/ApiService';
 import { ClientStats } from '../types/Client';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import NotificationService from '../services/NotificationService';
+import OfflineService from '../services/OfflineService';
 
 interface RealtimeContextType {
   isConnected: boolean;
@@ -34,6 +37,7 @@ interface RealtimeProviderProps {
 
 export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) => {
   const { user, getAuthToken } = useAuth();
+  const { isOnline } = useNetworkStatus();
   const [isConnected, setIsConnected] = useState(false);
   const [connectionState, setConnectionState] = useState('DISCONNECTED');
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -90,17 +94,21 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
       setNotifications(prev => {
         switch (action) {
           case 'new':
-            // Add new notification to the beginning
+            // Show browser notification for new notifications
+            NotificationService.show({
+              title: 'Visa Manager',
+              body: notification.message || 'New notification received',
+              tag: `notification-${notification.id}`,
+              data: notification,
+            });
             return [notification, ...prev];
           
           case 'read':
-            // Mark notification as read
             return prev.map(n => 
               n.id === notification.id ? { ...n, read: true } : n
             );
           
           case 'deleted':
-            // Remove notification
             return prev.filter(n => n.id !== notification.id);
           
           default:
@@ -173,14 +181,25 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     };
   }, []);
 
-  // Auto-connect when user is authenticated
+  // Handle network status changes
   useEffect(() => {
-    if (user && !isConnected) {
+    webSocketService.handleNetworkChange(isOnline);
+  }, [isOnline]);
+
+  // Initialize services
+  useEffect(() => {
+    NotificationService.initialize();
+    OfflineService.initialize();
+  }, []);
+
+  // Auto-connect when user is authenticated and online
+  useEffect(() => {
+    if (user && !isConnected && isOnline) {
       connect();
     } else if (!user && isConnected) {
       disconnect();
     }
-  }, [user, isConnected, connect, disconnect]);
+  }, [user, isConnected, isOnline, connect, disconnect]);
 
   // Cleanup on unmount
   useEffect(() => {

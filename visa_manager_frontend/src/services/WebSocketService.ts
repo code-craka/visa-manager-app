@@ -154,17 +154,28 @@ class WebSocketService {
 
   private scheduleReconnect(): void {
     this.reconnectAttempts++;
-    const delay = this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1); // Exponential backoff
+    const delay = Math.min(
+      this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1),
+      30000 // Max 30 seconds
+    );
     
     console.log(`Scheduling WebSocket reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
     
     setTimeout(() => {
-      if (this.token) {
+      if (this.token && this.reconnectAttempts <= this.maxReconnectAttempts) {
         this.connect(this.token).catch(error => {
           console.error('WebSocket reconnection failed:', error);
         });
       }
     }, delay);
+  }
+
+  // Enhanced reconnection with network status
+  handleNetworkChange(isOnline: boolean): void {
+    if (isOnline && !this.isConnected() && this.token) {
+      this.reconnectAttempts = 0; // Reset attempts on network recovery
+      this.connect(this.token).catch(console.error);
+    }
   }
 
   private startPing(): void {
